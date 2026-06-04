@@ -1,8 +1,85 @@
 {
+    "version": 1,
     "name": "InputSystem_Actions",
     "maps": [
         {
+            "name": "Debug",
+            "id": "3ce5643a-292d-4547-b829-7b97cc1fdbda",
+            "actions": [
+                {
+                    "name": "ResetLevel",
+                    "type": "Button",
+                    "id": "bd294bf2-4a00-4008-a705-bf26df44b6ec",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "StepPucks",
+                    "type": "Button",
+                    "id": "26b4ab0d-7f72-455a-8ee1-e03c6a37f768",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "17eb4733-8bd8-42d5-a910-610f9ef163a3",
+                    "path": "<Keyboard>/space",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "StepPucks",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "00545a35-2c93-425d-9eb8-f779396a47c8",
+                    "path": "<Keyboard>/r",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ResetLevel",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        },
+        {
             "name": "Player",
+            "id": "f2fc71c6-31cd-413f-9615-68d4963ca6fc",
+            "actions": [
+                {
+                    "name": "New action",
+                    "type": "Button",
+                    "id": "350e7fca-cb66-49e5-b9a4-c22c2296bea2",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "693c4ffb-63bd-49a0-a20f-84aa97668a7b",
+                    "path": "",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "New action",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        },
+        {
+            "name": "Example",
             "id": "df70fa95-8a34-4494-b137-73ab6b9c7d37",
             "actions": [
                 {
