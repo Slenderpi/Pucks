@@ -12,11 +12,4 @@ namespace Pucks {
         SplitHorizontal = 0b100000,
         SplitVertical   = 0b1000000
 	}
-
-    [Flags]
-    public enum EPuckSplitDirection {
-        None = 0,
-        Horizontal = 1,
-        Vertical = 2
-    }
 }

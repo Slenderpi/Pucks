@@ -1,13 +1,12 @@
 using Pucks;
 using Pucks.Utilities;
-using Slenderpi.Utilities;
-using Slenderpi.Utilities.ListExtensions;
+using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
+using Unity.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.Rendering;
 
 public class LevelManager : MonoBehaviour {
 
@@ -25,6 +24,8 @@ public class LevelManager : MonoBehaviour {
 	/// Physical size of a Puck.
 	/// </summary>
 	public float PuckSize = 1f;
+
+	public float UpdateDelay = 0.5f;
 
 	public Vector3 PositionOffset = new();
 
@@ -61,60 +62,6 @@ public class LevelManager : MonoBehaviour {
 
 	int _stepCount = 0;
 
-	/*
-	no grid variable, only function
-	store stationary pucks, moving pucks, and shouldSplit pucks
-	store in Dictionary<Vector2Int, PuckNode> _stationaryPucks, _movingPucks
-	//array _splittingPucks
-	array _exitedPucks
-
-	- # -
-	- - -
-	# # -
-
-	Set (0, 1) to v:
-	- - -
-	- v -
-	# # -
-
-	after step():
-	- - -
-	- - -
-	# _ -
-
-	after step():
-	- - -
-	- - -
-	| - >
-
-	after step():
-	- - -
-	^ - -
-	- - -
-
-	etc.
-
-	step() {
-		foreach Puck p in _exitedPucks:
-			move p based on its EPuckMovementDirection
-		//for int i = 0 to _movingPucks.Count, i += 2:
-		//	Puck pA = _movingPucks[i]
-		//	Puck pB = _movingPucks[i + 1]
-		//	set pA movement direction one way
-		//	set pB movement direction the other way
-		//	don't actually move the pucks
-		//	add both to _movingPucks
-		foreach Puck p in _movingPucks:
-			move p based on its EPuckMovementDirection
-			if p is now off grid, remove from _movingPucks and add to _exitedPucks
-			if new puck position is occupied by stationary (_stationaryPucks.ContainsKey(newPosition)):
-				change movement direction of both pucks accordingly
-				//move both the statinary puck and p to _splittingPucks
-				//	they should be added in pairs
-				//set both to appropriate EPuckState.SplitHorizontal or EPuckState.SplitVertical
-	}
-     */
-
 
 
 	private void Awake() {
@@ -138,6 +85,13 @@ public class LevelManager : MonoBehaviour {
 		}
 	}
 
+	IEnumerator LevelUpdateCoroutine() {
+		while (_movingPucks.Count > 0) {
+			yield return new WaitForSeconds(UpdateDelay);
+			StepLevel();
+		}
+	}
+
 	public static PuckNode GetPuckAt(Vector3 position) {
 		// TODO
 		return null;
@@ -145,23 +99,51 @@ public class LevelManager : MonoBehaviour {
 
 	public void GenerateLevel(int difficulty) {
 		_currentLevel.Clear();
+		_difficulty = difficulty;
 
 		// TODO
 
 		// temporary hardcoded level for testing)
+		_currentLevel.Add(new(0, 5));
 		_currentLevel.Add(new(1, 5));
+		_currentLevel.Add(new(1, 4));
+		_currentLevel.Add(new(2, 4));
+		_currentLevel.Add(new(2, 5));
 		_currentLevel.Add(new(3, 5));
 		_currentLevel.Add(new(3, 1));
 		//_movingPucks.Add(new(1, 5, EPuckMovementDirection.Left));
 
-		_solutionPosition = new(1, 5);
+		_solutionPosition = new(0, 5);
 		_solutionDirection = EPuckMovementDirection.Down;
 
 		ResetLevel();
 	}
 
 	public void StepLevel() {
-		// TODO
+		foreach (PuckNode p in _exitedPucks) {
+			p.Move();
+		}
+		int numMovingPucks = _movingPucks.Count;
+		for (int i = 0; i < numMovingPucks; i++) {
+			PuckNode p = _movingPucks[i];
+			p.Move();
+			if (_stationaryPucks.ContainsKey(p.GridPosition)) {
+				if (p.GetSplitDirection() == EPuckMovementDirection.SplitHorizontal) {
+					p.MovementDirection = EPuckMovementDirection.Left;
+					MoveStationaryPuck(p.GridPosition, EPuckMovementDirection.Right);
+				} else {
+					p.MovementDirection = EPuckMovementDirection.Up;
+					MoveStationaryPuck(p.GridPosition, EPuckMovementDirection.Down);
+				}
+			}
+		}
+		for (int i = 0; i < _movingPucks.Count; i++) {
+			PuckNode p = _movingPucks[i];
+			if (HasPuckExitedGrid(p)) {
+				_movingPucks.RemoveAtSwapBack(i--);
+				_exitedPucks.Add(p);
+			}
+		}
 
 		_stepCount++;
 
@@ -203,26 +185,35 @@ public class LevelManager : MonoBehaviour {
 		_exitedPucks.Clear();
 	}
 
-	public void TestSolution() {
-		MovePuck(_solutionPosition, _solutionDirection);
+	/// <summary>
+	/// This function is what should be called for the Player to move a Puck.
+	/// </summary>
+	/// <param name="position"></param>
+	/// <param name="direction"></param>
+	public void StartLevelWithChoice(Vector2Int position, EPuckMovementDirection direction) {
+		_hasLevelStarted = true;
+		MoveStationaryPuck(position, direction);
+
+		{
+			StringBuilder str = new($"[LevelManager]: START ({position.x}, {position.y}, {PuckUtil.PuckMovementToChar(direction)}) |");
+			str.Append(GetLevelString());
+			Debug.Log(str.ToString());
+		}
+
+		StartCoroutine(LevelUpdateCoroutine());
 	}
 
-	public void MovePuck(Vector2Int position, EPuckMovementDirection direction) {
+	void MoveStationaryPuck(Vector2Int position, EPuckMovementDirection direction) {
 		PuckNode p = _stationaryPucks[position];
 		_stationaryPucks.Remove(position);
 		p.MovementDirection = direction;
 		_movingPucks.Add(p);
-		_hasLevelStarted = true;
-
-		{
-			StringBuilder str = new($"[LevelManager]: MOVE ({position.x}, {position.y}, {PuckUtil.PuckMovementToChar(direction)}) |");
-			str.Append(GetLevelString());
-			Debug.Log(str.ToString());
-		}
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	bool HasPuckExitedGrid(PuckNode puck) => puck.GridPosition.x < 0 || puck.GridPosition.x >= WidthCount || puck.GridPosition.y < 0 || puck.GridPosition.y >= HeightCount;
+	bool HasPuckExitedGrid(PuckNode puck) => puck.GridPosition.x < 0 || puck.GridPosition.x >= HeightCount || puck.GridPosition.y < 0 || puck.GridPosition.y >= WidthCount;
+
+	void TestSolution() => StartLevelWithChoice(_solutionPosition, _solutionDirection);
 
 	/// <summary>
 	/// Get the current level as a string representation but still in its StringBuilder form.<br/>
@@ -271,7 +262,7 @@ public class LevelManager : MonoBehaviour {
 
 	/// <summary>
 	/// Gets level information such as grid size, difficulty, solution, and step count. Format:<br/>
-	/// (H: {HeightCount}, W: {WidthCount}) | Solution: (r: {_solPos.x}, c: {_solPos.y}, dir: {solDir}) | Step: {_step}
+	/// (H: {HeightCount}, W: {WidthCount}) | Solution: (r: {_solPos.x}, c: {_solPos.y}, dir: {solDir}) | Step: {_step} | ({#moving}+{#exited}) / {#stationary}
 	/// </summary>
 	/// <returns>A StringBuilder containing the information.</returns>
 	public StringBuilder GetLevelMetaDataStringBuilder() => new StringBuilder()
@@ -282,11 +273,12 @@ public class LevelManager : MonoBehaviour {
 			.Append(", c: ").Append(_solutionPosition.y)
 			.Append(", dir: ").Append(PuckUtil.PuckMovementToChar(_solutionDirection))
 			.Append(") | ")
-			.Append("Step: ").Append(_stepCount);
+			.Append("Step: ").Append(_stepCount)
+			.Append(" | (").Append(_movingPucks.Count).Append('+').Append(_exitedPucks.Count).Append(") / ").Append(_stationaryPucks.Count);
 
 	/// <summary>
 	/// Gets level information such as grid size, difficulty, solution, and step count. Format:<br/>
-	/// (H: {HeightCount}, W: {WidthCount}) | Solution: (r: {_solPos.x}, c: {_solPos.y}, dir: {solDir}) | Step: {_step}
+	/// (H: {HeightCount}, W: {WidthCount}) | Solution: (r: {_solPos.x}, c: {_solPos.y}, dir: {solDir}) | Step: {_step} | ({#moving}+{#exited}) / {#stationary}
 	/// </summary>
 	/// <returns>A StringBuilder containing the information.</returns>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -335,20 +327,26 @@ public class LevelManager : MonoBehaviour {
 			grid[pos.x, pos.y] = puck.MovementDirection;
 		}
 		foreach (var puck in _movingPucks) {
-			if (grid[puck.GridPosition.x, puck.GridPosition.y] == EPuckMovementDirection.Stationary) {
-				if (puck.MovementDirection == EPuckMovementDirection.Up || puck.MovementDirection == EPuckMovementDirection.Down)
-					grid[puck.GridPosition.x, puck.GridPosition.y] = EPuckMovementDirection.SplitHorizontal;
-				else
+			switch (grid[puck.GridPosition.x, puck.GridPosition.y]) {
+				case EPuckMovementDirection.Up:
+				case EPuckMovementDirection.Down:
 					grid[puck.GridPosition.x, puck.GridPosition.y] = EPuckMovementDirection.SplitVertical;
-			} else {
-				// This will still overwrite moving Pucks at the same position.
-				grid[puck.GridPosition.x, puck.GridPosition.y] = puck.MovementDirection;
+					break;
+				case EPuckMovementDirection.Left:
+				case EPuckMovementDirection.Right:
+					grid[puck.GridPosition.x, puck.GridPosition.y] = EPuckMovementDirection.SplitHorizontal;
+					break;
+				case EPuckMovementDirection.None:
+					grid[puck.GridPosition.x, puck.GridPosition.y] = puck.MovementDirection;
+					break;
+				default:
+					break;
 			}
 		}
 		return grid;
 	}
 
-	void D_DrawLevelGridOutline() {
+	void D_DrawLevelGridOutline(float duration=0f) {
 
 	}
 
