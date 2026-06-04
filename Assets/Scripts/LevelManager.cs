@@ -1,16 +1,26 @@
 using Pucks;
 using Pucks.Utilities;
+using Slenderpi.Utilities;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Unity.Collections;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class LevelManager : MonoBehaviour {
 
+	/// <summary>
+	/// The value should be set to something that is <= WidthCount * HeightCount
+	/// </summary>
+	const int PUCK_MOVER_POOL_SIZE = 20 * 16;
+
 	public static LevelManager Singleton;
+
+	[SerializeField]
+	PuckMover _puckPrefab;
 
 	/// <summary>
 	/// Number of columns in the level grid.
@@ -26,8 +36,6 @@ public class LevelManager : MonoBehaviour {
 	public float PuckSize = 1f;
 
 	public float UpdateDelay = 0.5f;
-
-	public Vector3 PositionOffset = new();
 
 	public int StepCount => _stepCount;
 
@@ -45,6 +53,8 @@ public class LevelManager : MonoBehaviour {
 	EPuckMovementDirection _solutionDirection = EPuckMovementDirection.Up;
 	int _difficulty = 0;
 
+	Vector3 _positionOffset = new();
+
 	/// <summary>
 	/// Contains all stationary Pucks, indexed by their grid position.
 	/// </summary>
@@ -57,6 +67,12 @@ public class LevelManager : MonoBehaviour {
 	/// Contains all Pucks that have exited the level grid.
 	/// </summary>
 	List<PuckNode> _exitedPucks = new();
+	/// <summary>
+	/// Hashmap of currently active PuckMovers.
+	/// </summary>
+	Dictionary<PuckNode, PuckMover> _activePuckMovers = new();
+	List<PuckMover> _puckMoverPool = new();
+	int _puckPoolHeader = 0;
 
 	bool _hasLevelStarted = false;
 
@@ -67,7 +83,10 @@ public class LevelManager : MonoBehaviour {
 	private void Awake() {
 		if (!Singleton) {
 			Singleton = this;
-			DontDestroyOnLoad(gameObject);
+			//DontDestroyOnLoad(gameObject);
+
+			_positionOffset = new(WidthCount * PuckSize / -2f, HeightCount * PuckSize / -2f, 0);
+			CreatePuckMoverPool();
 		} else if (Singleton != this) {
 			Destroy(gameObject);
 		}
@@ -77,6 +96,15 @@ public class LevelManager : MonoBehaviour {
 		BindDebugActions();
 		GameManager.DebugActions.Enable();
 			GenerateLevel(1);
+	}
+
+	private void Update() {
+		D_DrawLevelGridOutline();
+		if (!_hasLevelStarted)
+			return;
+		foreach (var (pn, pm) in _activePuckMovers) {
+			pm.transform.position = PointToPosition(pn.GridPosition);
+		}
 	}
 
 	private void OnDestroy() {
@@ -92,9 +120,13 @@ public class LevelManager : MonoBehaviour {
 		}
 	}
 
+	void StartLevelUpdateCoroutine() => StartCoroutine(LevelUpdateCoroutine());
+
 	public static PuckNode GetPuckAt(Vector3 position) {
-		// TODO
-		return null;
+		Vector2Int point = Singleton.PositionToPoint(position);
+		return Singleton._stationaryPucks.ContainsKey(point)
+			? Singleton._stationaryPucks[point]
+			: null;
 	}
 
 	public void GenerateLevel(int difficulty) {
@@ -111,6 +143,11 @@ public class LevelManager : MonoBehaviour {
 		_currentLevel.Add(new(2, 5));
 		_currentLevel.Add(new(3, 5));
 		_currentLevel.Add(new(3, 1));
+
+		_currentLevel.Add(new(0, 0));
+		_currentLevel.Add(new(0, WidthCount - 1));
+		_currentLevel.Add(new(HeightCount - 1, WidthCount - 1));
+		_currentLevel.Add(new(HeightCount - 1, 0));
 		//_movingPucks.Add(new(1, 5, EPuckMovementDirection.Left));
 
 		_solutionPosition = new(0, 5);
@@ -158,9 +195,17 @@ public class LevelManager : MonoBehaviour {
 		_hasLevelStarted = false;
 		_stepCount = 0;
 		ClearLevel();
+		// Create stationary PuckNodes
 		foreach (var pos in _currentLevel) {
 			PuckNode puck = new(pos.x, pos.y);
 			_stationaryPucks.Add(pos, puck);
+		}
+		// Bind PuckMovers
+		foreach (var (_, pn) in _stationaryPucks) {
+			PuckMover pm = SpawnPuckMover();
+			pm.transform.position = PointToPosition(pn.GridPosition);
+			pm.gameObject.SetActive(true);
+			_activePuckMovers.Add(pn, pm);
 		}
 
 		{
@@ -174,15 +219,20 @@ public class LevelManager : MonoBehaviour {
 	/// Destroys all Pucks currently in the level.
 	/// </summary>
 	public void ClearLevel() {
-		foreach (var (_, puck) in _stationaryPucks)
-			puck.Destroy();
-		foreach (var puck in _movingPucks)
-			puck.Destroy();
-		foreach (var puck in _exitedPucks)
-			puck.Destroy();
+		//foreach (var (_, puck) in _stationaryPucks)
+		//	puck.Destroy();
+		//foreach (var puck in _movingPucks)
+		//	puck.Destroy();
+		//foreach (var puck in _exitedPucks)
+		//	puck.Destroy();
+		foreach (var (_, pm) in _activePuckMovers) {
+			pm.gameObject.SetActive(false);
+		}
 		_stationaryPucks.Clear();
 		_movingPucks.Clear();
 		_exitedPucks.Clear();
+		_activePuckMovers.Clear();
+		_puckPoolHeader = 0;
 	}
 
 	/// <summary>
@@ -190,18 +240,31 @@ public class LevelManager : MonoBehaviour {
 	/// </summary>
 	/// <param name="position"></param>
 	/// <param name="direction"></param>
-	public void StartLevelWithChoice(Vector2Int position, EPuckMovementDirection direction) {
-		_hasLevelStarted = true;
-		MoveStationaryPuck(position, direction);
+	public static void StartLevelWithChoice(Vector2Int position, EPuckMovementDirection direction) {
+		Singleton._hasLevelStarted = true;
+		Singleton.MoveStationaryPuck(position, direction);
 
 		{
 			StringBuilder str = new($"[LevelManager]: START ({position.x}, {position.y}, {PuckUtil.PuckMovementToChar(direction)}) |");
-			str.Append(GetLevelString());
+			str.Append(Singleton.GetLevelString());
 			Debug.Log(str.ToString());
-		}
 
-		StartCoroutine(LevelUpdateCoroutine());
+			Singleton.StartLevelUpdateCoroutine();
+		}
 	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector3 PointToPosition(Vector2Int point) => new(
+		point.y * PuckSize + _positionOffset.x + PuckSize * 0.5f,
+		(HeightCount - point.x - 1) * PuckSize + _positionOffset.y + PuckSize * 0.5f,
+		_positionOffset.z
+	);
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2Int PositionToPoint(Vector3 position) => new(
+		HeightCount - 1 - Mathf.RoundToInt((position.y - _positionOffset.y - PuckSize * 0.5f) / PuckSize),
+		Mathf.RoundToInt((position.x - _positionOffset.x - PuckSize * 0.5f) / PuckSize)
+	);
 
 	void MoveStationaryPuck(Vector2Int position, EPuckMovementDirection direction) {
 		PuckNode p = _stationaryPucks[position];
@@ -213,6 +276,7 @@ public class LevelManager : MonoBehaviour {
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	bool HasPuckExitedGrid(PuckNode puck) => puck.GridPosition.x < 0 || puck.GridPosition.x >= HeightCount || puck.GridPosition.y < 0 || puck.GridPosition.y >= WidthCount;
 
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	void TestSolution() => StartLevelWithChoice(_solutionPosition, _solutionDirection);
 
 	/// <summary>
@@ -306,7 +370,6 @@ public class LevelManager : MonoBehaviour {
 	}
 
 	private void OnResetLevelActionStarted(InputAction.CallbackContext context) {
-		Debug.Log("Reset level pressed");
 		ResetLevel();
 	}
 
@@ -315,6 +378,20 @@ public class LevelManager : MonoBehaviour {
 			TestSolution();
 		} else {
 			StepLevel();
+		}
+	}
+
+	/// <summary>
+	/// Doesn't actually spawn a PuckMover. Rather, it takes from the _puckMoverPool and increments the _puckPoolHeader pointer.
+	/// </summary>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	PuckMover SpawnPuckMover() => _puckMoverPool[_puckPoolHeader++];
+
+	void CreatePuckMoverPool() {
+		for (int i = 0; i < PUCK_MOVER_POOL_SIZE; i++) {
+			PuckMover pm = Instantiate(_puckPrefab);
+			pm.gameObject.SetActive(false);
+			_puckMoverPool.Add(pm);
 		}
 	}
 
@@ -347,7 +424,8 @@ public class LevelManager : MonoBehaviour {
 	}
 
 	void D_DrawLevelGridOutline(float duration=0f) {
-
+		float3 box = new(WidthCount * PuckSize, HeightCount * PuckSize, PuckSize);
+		Util.D_DrawBox(box + new float3(_positionOffset) - box / 2f, box, Color.black, duration, false);
 	}
 
 }

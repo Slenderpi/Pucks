@@ -44,6 +44,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 53de93b3bb22e2841a8020a2230ba380, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LevelManager
+  _puckPrefab: {fileID: 3050537813321254843, guid: 6365be0f239768544ad47833f25d7029, type: 3}
   WidthCount: 20
   HeightCount: 16
   PuckSize: 1
+  UpdateDelay: 0.5

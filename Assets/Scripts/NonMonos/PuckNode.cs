@@ -2,6 +2,8 @@ using UnityEngine;
 
 namespace Pucks {
     public class PuckNode {
+
+        public int Id { get; }
         /// <summary>
         /// IMPORTANT: stored as (x, y) = (row, col)
         /// </summary>
@@ -18,6 +20,7 @@ namespace Pucks {
         public PuckNode(int row=0, int col=0, EPuckMovementDirection moveDir=EPuckMovementDirection.Stationary) {
             GridPosition = new(row, col);
             MovementDirection = moveDir;
+            Id = GenerateId();
         }
 
         /// <summary>
@@ -54,5 +57,12 @@ namespace Pucks {
         public void Destroy() {
             // TODO: destroy linked GameObject?
         }
-    }
+
+		static int _id_DoNotTouch = 1;
+		protected static int GenerateId() {
+			_id_DoNotTouch = (_id_DoNotTouch + 1) % 10000000;
+			return _id_DoNotTouch;
+		}
+
+	}
 }

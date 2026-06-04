@@ -1,4 +1,6 @@
+using Pucks;
 using Slenderpi.Utilities;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -10,7 +12,7 @@ public class PlayerSliderControl : MonoBehaviour {
 
 	bool _isDragging;
 	//Entity _selectedSlider;
-	PuckMover _selectedPuck;
+	PuckNode _selectedPuck;
 	Vector3 _mouseSelectStart;
 
 
@@ -24,27 +26,39 @@ public class PlayerSliderControl : MonoBehaviour {
 	// The below code provides helpful visuals during mouse dragging
 	// To see these visuals in-game, make sure the "Gizmos" button in the top right of the Game window is toggled on
 	private void Update() {
-		if (!_isDragging)
-			return;
-		Vector3 mpos = GetMouseWorldPosition();
-		Vector3 dragVector = mpos - _mouseSelectStart;
-		if (SuccessfullySelectedPuck()) {
-			Vector3 puckPos = _selectedPuck.transform.position;
-			if (IsDragDistBigEnough(dragVector)) {
-				Util.D_DrawBox(puckPos, new(LevelManager.Singleton.PuckSize + 0.01f), Color.cyan); // slider
-				Util.D_DrawArrowFromTo(_mouseSelectStart, mpos, Color.green); // dragVector
-				Util.D_DrawArrowFromTo(puckPos, GetMovementDirection(dragVector) * 2f + puckPos, Color.cyan); // moveDir
+		if (_isDragging) {
+			Vector3 mpos = GetMouseWorldPosition();
+			Vector3 dragVector = mpos - _mouseSelectStart;
+			if (SuccessfullySelectedPuck()) {
+				Vector3 puckPos = LevelManager.Singleton.PointToPosition(_selectedPuck.GridPosition);
+				if (IsDragDistBigEnough(dragVector)) {
+					Util.D_DrawBox(puckPos, new(LevelManager.Singleton.PuckSize + 0.01f), Color.cyan); // slider
+					Util.D_DrawArrowFromTo(_mouseSelectStart, mpos, Color.green); // dragVector
+					Util.D_DrawArrowFromTo(
+						puckPos,
+						(Mathf.Abs(dragVector.x) > Mathf.Abs(dragVector.y) ? new Vector3(Mathf.Sign(dragVector.x), 0, 0) : new Vector3(0, Mathf.Sign(dragVector.y), 0)) * 2f + puckPos,
+						Color.cyan
+					); // moveDir
+				} else {
+					Util.D_DrawBox(puckPos, new(LevelManager.Singleton.PuckSize + 0.01f), Color.yellow); // slider
+					Util.D_DrawArrowFromTo(_mouseSelectStart, mpos, Color.yellow); // dragVector
+				}
 			} else {
-				Util.D_DrawBox(puckPos, new(LevelManager.Singleton.PuckSize + 0.01f), Color.yellow); // slider
-				Util.D_DrawArrowFromTo(_mouseSelectStart, mpos, Color.yellow); // dragVector
+				Debug.DrawRay( // dragVector
+					_mouseSelectStart,
+					dragVector,
+					Color.red,
+					duration: 0,
+					depthTest: false
+				);
 			}
 		} else {
-			Debug.DrawRay( // dragVector
-				_mouseSelectStart,
-				dragVector,
-				Color.red,
-				duration: 0,
-				depthTest: false
+			PuckNode p = LevelManager.GetPuckAt(GetMouseWorldPosition());
+			if (p == null)
+				return;
+			Util.D_DrawBox(
+				LevelManager.Singleton.PointToPosition(p.GridPosition),
+				LevelManager.Singleton.PuckSize + 0.01f, Color.red, 0, false
 			);
 		}
 	}
@@ -52,9 +66,7 @@ public class PlayerSliderControl : MonoBehaviour {
 	private void OnSelectSliderStarted(InputAction.CallbackContext _) {
 		_isDragging = true;
 		_mouseSelectStart = GetMouseWorldPosition();
-		//_selectedPuck = LevelManager.GetPuckAt(_mouseSelectStart);
-		//if ()
-		//	Debug.LogWarning("nothing");
+		_selectedPuck = LevelManager.GetPuckAt(_mouseSelectStart);
 	}
 
 	private void OnSelectSliderCanceled(InputAction.CallbackContext _) {
@@ -74,6 +86,7 @@ public class PlayerSliderControl : MonoBehaviour {
 		//Vector3 movementDirection = GetMovementDirection(dragVector);
 		//sliderComp.SliderVelocity = sliderComp.MovementSpeed * movementDirection;
 		//GetEm().SetComponentData(_selectedSlider, sliderComp);
+		LevelManager.StartLevelWithChoice(_selectedPuck.GridPosition, GetMovementDirection(dragVector));
 		_selectedPuck = null;
 	}
 
@@ -88,7 +101,10 @@ public class PlayerSliderControl : MonoBehaviour {
 
 	bool IsDragDistBigEnough(Vector3 dragVector) => Vector3.SqrMagnitude(dragVector) >= Util.pow2(_dragDeadzone);
 
-	Vector3 GetMovementDirection(Vector3 dragVector) => Mathf.Abs(dragVector.x) > Mathf.Abs(dragVector.z) ? new(Mathf.Sign(dragVector.x), 0, 0) : new(0, 0, Mathf.Sign(dragVector.z));
+	EPuckMovementDirection GetMovementDirection(Vector3 dragVector) =>
+		Mathf.Abs(dragVector.x) > Mathf.Abs(dragVector.y)
+		? (dragVector.x > 0 ? EPuckMovementDirection.Right : EPuckMovementDirection.Left)
+		: (dragVector.y > 0 ? EPuckMovementDirection.Up : EPuckMovementDirection.Down);
 
 	//EntityManager GetEm() => World.DefaultGameObjectInjectionWorld.EntityManager;
 
