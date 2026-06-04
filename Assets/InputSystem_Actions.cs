@@ -141,7 +141,7 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             ""id"": ""f2fc71c6-31cd-413f-9615-68d4963ca6fc"",
             ""actions"": [
                 {
-                    ""name"": ""New action"",
+                    ""name"": ""SelectSlider"",
                     ""type"": ""Button"",
                     ""id"": ""350e7fca-cb66-49e5-b9a4-c22c2296bea2"",
                     ""expectedControlType"": """",
@@ -154,11 +154,11 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""693c4ffb-63bd-49a0-a20f-84aa97668a7b"",
-                    ""path"": """",
+                    ""path"": ""<Mouse>/leftButton"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""New action"",
+                    ""action"": ""SelectSlider"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -1224,7 +1224,7 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         m_Debug_StepPucks = m_Debug.FindAction("StepPucks", throwIfNotFound: true);
         // Player
         m_Player = asset.FindActionMap("Player", throwIfNotFound: true);
-        m_Player_Newaction = m_Player.FindAction("New action", throwIfNotFound: true);
+        m_Player_SelectSlider = m_Player.FindAction("SelectSlider", throwIfNotFound: true);
         // Example
         m_Example = asset.FindActionMap("Example", throwIfNotFound: true);
         m_Example_Move = m_Example.FindAction("Move", throwIfNotFound: true);
@@ -1438,7 +1438,7 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
     // Player
     private readonly InputActionMap m_Player;
     private List<IPlayerActions> m_PlayerActionsCallbackInterfaces = new List<IPlayerActions>();
-    private readonly InputAction m_Player_Newaction;
+    private readonly InputAction m_Player_SelectSlider;
     /// <summary>
     /// Provides access to input actions defined in input action map "Player".
     /// </summary>
@@ -1451,9 +1451,9 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// </summary>
         public PlayerActions(@InputSystem_Actions wrapper) { m_Wrapper = wrapper; }
         /// <summary>
-        /// Provides access to the underlying input action "Player/Newaction".
+        /// Provides access to the underlying input action "Player/SelectSlider".
         /// </summary>
-        public InputAction @Newaction => m_Wrapper.m_Player_Newaction;
+        public InputAction @SelectSlider => m_Wrapper.m_Player_SelectSlider;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -1480,9 +1480,9 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         {
             if (instance == null || m_Wrapper.m_PlayerActionsCallbackInterfaces.Contains(instance)) return;
             m_Wrapper.m_PlayerActionsCallbackInterfaces.Add(instance);
-            @Newaction.started += instance.OnNewaction;
-            @Newaction.performed += instance.OnNewaction;
-            @Newaction.canceled += instance.OnNewaction;
+            @SelectSlider.started += instance.OnSelectSlider;
+            @SelectSlider.performed += instance.OnSelectSlider;
+            @SelectSlider.canceled += instance.OnSelectSlider;
         }
 
         /// <summary>
@@ -1494,9 +1494,9 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// <seealso cref="PlayerActions" />
         private void UnregisterCallbacks(IPlayerActions instance)
         {
-            @Newaction.started -= instance.OnNewaction;
-            @Newaction.performed -= instance.OnNewaction;
-            @Newaction.canceled -= instance.OnNewaction;
+            @SelectSlider.started -= instance.OnSelectSlider;
+            @SelectSlider.performed -= instance.OnSelectSlider;
+            @SelectSlider.canceled -= instance.OnSelectSlider;
         }
 
         /// <summary>
@@ -2004,12 +2004,12 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
     public interface IPlayerActions
     {
         /// <summary>
-        /// Method invoked when associated input action "New action" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// Method invoked when associated input action "SelectSlider" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
         /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void OnNewaction(InputAction.CallbackContext context);
+        void OnSelectSlider(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "Example" which allows adding and removing callbacks.

@@ -1,5 +1,7 @@
 using Pucks;
 using Pucks.Utilities;
+using Slenderpi.Utilities;
+using Slenderpi.Utilities.ListExtensions;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -8,6 +10,8 @@ using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
 
 public class LevelManager : MonoBehaviour {
+
+	public static LevelManager Singleton;
 
 	/// <summary>
 	/// Number of columns in the level grid.
@@ -21,6 +25,8 @@ public class LevelManager : MonoBehaviour {
 	/// Physical size of a Puck.
 	/// </summary>
 	public float PuckSize = 1f;
+
+	public Vector3 PositionOffset = new();
 
 	public int StepCount => _stepCount;
 
@@ -50,6 +56,8 @@ public class LevelManager : MonoBehaviour {
 	/// Contains all Pucks that have exited the level grid.
 	/// </summary>
 	List<PuckNode> _exitedPucks = new();
+
+	bool _hasLevelStarted = false;
 
 	int _stepCount = 0;
 
@@ -109,10 +117,30 @@ public class LevelManager : MonoBehaviour {
 
 
 
+	private void Awake() {
+		if (!Singleton) {
+			Singleton = this;
+			DontDestroyOnLoad(gameObject);
+		} else if (Singleton != this) {
+			Destroy(gameObject);
+		}
+	}
+
 	private void Start() {
 		BindDebugActions();
 		GameManager.DebugActions.Enable();
 			GenerateLevel(1);
+	}
+
+	private void OnDestroy() {
+		if (Singleton == this) {
+			Singleton = null;
+		}
+	}
+
+	public static PuckNode GetPuckAt(Vector3 position) {
+		// TODO
+		return null;
 	}
 
 	public void GenerateLevel(int difficulty) {
@@ -145,6 +173,7 @@ public class LevelManager : MonoBehaviour {
 	}
 
 	public void ResetLevel() {
+		_hasLevelStarted = false;
 		_stepCount = 0;
 		ClearLevel();
 		foreach (var pos in _currentLevel) {
@@ -173,6 +202,27 @@ public class LevelManager : MonoBehaviour {
 		_movingPucks.Clear();
 		_exitedPucks.Clear();
 	}
+
+	public void TestSolution() {
+		MovePuck(_solutionPosition, _solutionDirection);
+	}
+
+	public void MovePuck(Vector2Int position, EPuckMovementDirection direction) {
+		PuckNode p = _stationaryPucks[position];
+		_stationaryPucks.Remove(position);
+		p.MovementDirection = direction;
+		_movingPucks.Add(p);
+		_hasLevelStarted = true;
+
+		{
+			StringBuilder str = new($"[LevelManager]: MOVE ({position.x}, {position.y}, {PuckUtil.PuckMovementToChar(direction)}) |");
+			str.Append(GetLevelString());
+			Debug.Log(str.ToString());
+		}
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	bool HasPuckExitedGrid(PuckNode puck) => puck.GridPosition.x < 0 || puck.GridPosition.x >= WidthCount || puck.GridPosition.y < 0 || puck.GridPosition.y >= HeightCount;
 
 	/// <summary>
 	/// Get the current level as a string representation but still in its StringBuilder form.<br/>
@@ -258,9 +308,6 @@ public class LevelManager : MonoBehaviour {
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void PrintLevel() => Debug.Log(GetLevelString());
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	bool HasPuckExitedGrid(PuckNode puck) => puck.GridPosition.x < 0 || puck.GridPosition.x >= WidthCount || puck.GridPosition.y < 0 || puck.GridPosition.y >= HeightCount;
-
 	private void BindDebugActions() {
 		GameManager.DebugActions.ResetLevel.started += OnResetLevelActionStarted;
 		GameManager.DebugActions.StepPucks.started += OnStepPucksActionStarted;
@@ -272,9 +319,11 @@ public class LevelManager : MonoBehaviour {
 	}
 
 	private void OnStepPucksActionStarted(InputAction.CallbackContext context) {
-		if (_movingPucks.Count == 0)
-			Debug.LogWarning("[LevelManager]: No moving Pucks to step.");
-		StepLevel();
+		if (!_hasLevelStarted) {
+			TestSolution();
+		} else {
+			StepLevel();
+		}
 	}
 
 	/// <summary>
@@ -297,6 +346,10 @@ public class LevelManager : MonoBehaviour {
 			}
 		}
 		return grid;
+	}
+
+	void D_DrawLevelGridOutline() {
+
 	}
 
 }

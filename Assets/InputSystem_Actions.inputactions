@@ -55,7 +55,7 @@
             "id": "f2fc71c6-31cd-413f-9615-68d4963ca6fc",
             "actions": [
                 {
-                    "name": "New action",
+                    "name": "SelectSlider",
                     "type": "Button",
                     "id": "350e7fca-cb66-49e5-b9a4-c22c2296bea2",
                     "expectedControlType": "",
@@ -68,11 +68,11 @@
                 {
                     "name": "",
                     "id": "693c4ffb-63bd-49a0-a20f-84aa97668a7b",
-                    "path": "",
+                    "path": "<Mouse>/leftButton",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "New action",
+                    "action": "SelectSlider",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
