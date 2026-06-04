@@ -1,7 +1,8 @@
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
-namespace Pucks.Utilities.PuckUtils {
+namespace Pucks.Utilities {
 	public static class PuckUtil {
 		public readonly static char PUCK_CHAR_NONE = ' ';
 		public readonly static char PUCK_CHAR_STATIONARY = '#';
@@ -9,20 +10,28 @@ namespace Pucks.Utilities.PuckUtils {
 		public readonly static char PUCK_CHAR_DOWN = 'v';
 		public readonly static char PUCK_CHAR_RIGHT = '>';
 		public readonly static char PUCK_CHAR_LEFT = '<';
+		public readonly static char PUCK_CHAR_SPLIT_HORIZONTAL = '-';
+		public readonly static char PUCK_CHAR_SPLIT_VERTICAL = '|';
 
-		//[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		//public static char PuckStateToChar(EPuckState state) => state switch {
-		//	EPuckState.None => PUCK_CHAR_NONE,
-		//	EPuckState.Puck => PUCK_CHAR_STATIONARY,
-		//	EPuckState.MovingUp => PUCK_CHAR_UP,
-		//	EPuckState.MovingDown => PUCK_CHAR_DOWN,
-		//	EPuckState.MovingRight => PUCK_CHAR_RIGHT,
-		//	EPuckState.MovingLeft => PUCK_CHAR_LEFT,
-		//	EPuckState.OffScreen => '!',
-		//	EPuckState.ShouldSplitUpDown => '|',
-		//	EPuckState.ShouldSplitLeftRight => '-',
-		//	_ => '?'
-		//};
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static char PuckMovementToChar(EPuckMovementDirection state) => state switch {
+			EPuckMovementDirection.None => PUCK_CHAR_NONE,
+			EPuckMovementDirection.Stationary => PUCK_CHAR_STATIONARY,
+			EPuckMovementDirection.Up => PUCK_CHAR_UP,
+			EPuckMovementDirection.Down => PUCK_CHAR_DOWN,
+			EPuckMovementDirection.Left => PUCK_CHAR_LEFT,
+			EPuckMovementDirection.Right => PUCK_CHAR_RIGHT,
+			EPuckMovementDirection.SplitHorizontal => PUCK_CHAR_SPLIT_HORIZONTAL,
+			EPuckMovementDirection.SplitVertical => PUCK_CHAR_SPLIT_VERTICAL,
+			_ => '?'
+		};
 
+		/// <summary>
+		/// Convenient method to add a puck to a &lt;position, puck&gt; dictionary.
+		/// </summary>
+		/// <param name="dict"></param>
+		public static void Add(this Dictionary<Vector2Int, PuckNode> dict, PuckNode puck) {
+			dict.Add(puck.GridPosition, puck);
+		}
 	}
 }
