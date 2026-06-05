@@ -35,7 +35,11 @@ public class LevelManager : MonoBehaviour {
 	/// </summary>
 	public float PuckSize = 1f;
 
-	public float UpdateDelay = 0.5f;
+	/// <summary>
+	/// Time between StepLevel() calls.
+	/// </summary>
+	[Min(0.005f)]
+	public float StepUpdateDelay = 0.1f;
 
 	public int StepCount => _stepCount;
 
@@ -75,6 +79,7 @@ public class LevelManager : MonoBehaviour {
 	int _puckPoolHeader = 0;
 
 	bool _hasLevelStarted = false;
+	float _timeSinceLastStep = 0;
 
 	int _stepCount = 0;
 
@@ -102,9 +107,14 @@ public class LevelManager : MonoBehaviour {
 		D_DrawLevelGridOutline();
 		if (!_hasLevelStarted)
 			return;
-		foreach (var (pn, pm) in _activePuckMovers) {
-			pm.transform.position = PointToPosition(pn.GridPosition);
+		while (_timeSinceLastStep >= StepUpdateDelay) {
+			_timeSinceLastStep -= StepUpdateDelay;
+			StepLevel();
 		}
+		foreach (var (pn, pm) in _activePuckMovers) {
+			pm.transform.position = GetLerpedPosition(pn);
+		}
+		_timeSinceLastStep += Time.deltaTime;
 	}
 
 	private void OnDestroy() {
@@ -112,15 +122,6 @@ public class LevelManager : MonoBehaviour {
 			Singleton = null;
 		}
 	}
-
-	IEnumerator LevelUpdateCoroutine() {
-		while (_movingPucks.Count > 0) {
-			yield return new WaitForSeconds(UpdateDelay);
-			StepLevel();
-		}
-	}
-
-	void StartLevelUpdateCoroutine() => StartCoroutine(LevelUpdateCoroutine());
 
 	public static PuckNode GetPuckAt(Vector3 position) {
 		Vector2Int point = Singleton.PositionToPoint(position);
@@ -184,16 +185,17 @@ public class LevelManager : MonoBehaviour {
 
 		_stepCount++;
 
-		{
-			StringBuilder str = new("[LevelManager]: STEP |");
-			str.Append(GetLevelString());
-			Debug.Log(str.ToString());
-		}
+		//{
+		//	StringBuilder str = new("[LevelManager]: STEP |");
+		//	str.Append(GetLevelString());
+		//	Debug.Log(str.ToString());
+		//}
 	}
 
 	public void ResetLevel() {
 		_hasLevelStarted = false;
 		_stepCount = 0;
+		_timeSinceLastStep = 0f;
 		ClearLevel();
 		// Create stationary PuckNodes
 		foreach (var pos in _currentLevel) {
@@ -208,11 +210,11 @@ public class LevelManager : MonoBehaviour {
 			_activePuckMovers.Add(pn, pm);
 		}
 
-		{
-			StringBuilder str = new("[LevelManager]: RESET |");
-			str.Append(GetLevelString());
-			Debug.Log(str.ToString());
-		}
+		//{
+		//	StringBuilder str = new("[LevelManager]: RESET |");
+		//	str.Append(GetLevelString());
+		//	Debug.Log(str.ToString());
+		//}
 	}
 
 	/// <summary>
@@ -243,14 +245,13 @@ public class LevelManager : MonoBehaviour {
 	public static void StartLevelWithChoice(Vector2Int position, EPuckMovementDirection direction) {
 		Singleton._hasLevelStarted = true;
 		Singleton.MoveStationaryPuck(position, direction);
+		Singleton.StepLevel();
 
-		{
-			StringBuilder str = new($"[LevelManager]: START ({position.x}, {position.y}, {PuckUtil.PuckMovementToChar(direction)}) |");
-			str.Append(Singleton.GetLevelString());
-			Debug.Log(str.ToString());
-
-			Singleton.StartLevelUpdateCoroutine();
-		}
+		//{
+		//	StringBuilder str = new($"[LevelManager]: START ({position.x}, {position.y}, {PuckUtil.PuckMovementToChar(direction)}) |");
+		//	str.Append(Singleton.GetLevelString());
+		//	Debug.Log(str.ToString());
+		//}
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -394,6 +395,12 @@ public class LevelManager : MonoBehaviour {
 			_puckMoverPool.Add(pm);
 		}
 	}
+
+	Vector3 GetLerpedPosition(PuckNode p) => Vector3.Lerp(
+		PointToPosition(p.PreviousGridPosition),
+		PointToPosition(p.GridPosition),
+		_timeSinceLastStep / StepUpdateDelay
+	);
 
 	/// <summary>
 	/// Creates a 2d array representing the current level, where each Puck is represented purely by its movement direction.

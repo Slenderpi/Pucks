@@ -48,4 +48,4 @@ MonoBehaviour:
   WidthCount: 20
   HeightCount: 16
   PuckSize: 1
-  UpdateDelay: 0.5
+  StepUpdateDelay: 0.1
