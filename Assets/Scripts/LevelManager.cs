@@ -1,7 +1,6 @@
 using Pucks;
 using Pucks.Utilities;
 using Slenderpi.Utilities;
-using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -137,22 +136,53 @@ public class LevelManager : MonoBehaviour {
 		// TODO
 
 		// temporary hardcoded level for testing)
+
+		//for (int r = 0; r < HeightCount; r++)
+		//	for (int c = 0; c < WidthCount; c++)
+		//		_currentLevel.Add(new(r, c));
+		//_solutionPosition = new(0, );
+		//_solutionDirection = EPuckMovementDirection.Right;
+
+		_currentLevel.Add(new(8, 2));
+		_currentLevel.Add(new(0, 10));
+		_currentLevel.Add(new(8, 10));
+		_currentLevel.Add(new(10, 10));
 		_currentLevel.Add(new(0, 5));
-		_currentLevel.Add(new(1, 5));
-		_currentLevel.Add(new(1, 4));
-		_currentLevel.Add(new(2, 4));
-		_currentLevel.Add(new(2, 5));
-		_currentLevel.Add(new(3, 5));
-		_currentLevel.Add(new(3, 1));
+		_currentLevel.Add(new(5, 5));
+		_currentLevel.Add(new(5, 0));
+		_currentLevel.Add(new(5, 7));
+		_solutionPosition = new(8, 2);
+		_solutionDirection = EPuckMovementDirection.Right;
 
-		_currentLevel.Add(new(0, 0));
-		_currentLevel.Add(new(0, WidthCount - 1));
-		_currentLevel.Add(new(HeightCount - 1, WidthCount - 1));
-		_currentLevel.Add(new(HeightCount - 1, 0));
-		//_movingPucks.Add(new(1, 5, EPuckMovementDirection.Left));
+		//_currentLevel.Add(new(0, 5));
+		//_currentLevel.Add(new(1, 5));
+		//_currentLevel.Add(new(1, 4));
+		//_currentLevel.Add(new(2, 4));
+		//_currentLevel.Add(new(2, 5));
+		//_currentLevel.Add(new(3, 5));
+		//_currentLevel.Add(new(3, 1));
+		//_solutionPosition = new(0, 5);
+		//_solutionDirection = EPuckMovementDirection.Down;
 
-		_solutionPosition = new(0, 5);
-		_solutionDirection = EPuckMovementDirection.Down;
+		//_currentLevel.Add(new(0, 0));
+		//_currentLevel.Add(new(0, 1));
+		//_currentLevel.Add(new(0, 3));
+		//_currentLevel.Add(new(0, 4));
+		//_currentLevel.Add(new(1, 0));
+		//_currentLevel.Add(new(1, 1));
+		//_currentLevel.Add(new(1, 3));
+		//_currentLevel.Add(new(2, 1));
+		//_currentLevel.Add(new(3, 1));
+		//_currentLevel.Add(new(3, 3));
+		//_currentLevel.Add(new(3, 5));
+		//_currentLevel.Add(new(4, 1));
+		//_solutionPosition = new(0, 1);
+		//_solutionDirection = EPuckMovementDirection.Down;
+
+		//_currentLevel.Add(new(0, 0));
+		//_currentLevel.Add(new(0, WidthCount - 1));
+		//_currentLevel.Add(new(HeightCount - 1, WidthCount - 1));
+		//_currentLevel.Add(new(HeightCount - 1, 0));
 
 		ResetLevel();
 	}

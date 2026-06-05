@@ -1,6 +1,5 @@
 using Pucks;
 using Slenderpi.Utilities;
-using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -11,7 +10,6 @@ public class PlayerSliderControl : MonoBehaviour {
 	float _dragDeadzone = 0.15f;
 
 	bool _isDragging;
-	//Entity _selectedSlider;
 	PuckNode _selectedPuck;
 	Vector3 _mouseSelectStart;
 
@@ -72,20 +70,8 @@ public class PlayerSliderControl : MonoBehaviour {
 	private void OnSelectSliderCanceled(InputAction.CallbackContext _) {
 		_isDragging = false;
 		Vector3 dragVector = GetMouseWorldPosition() - _mouseSelectStart;
-		if (!SuccessfullySelectedPuck() || !IsDragDistBigEnough(dragVector)) {
-			//_selectedSlider = Entity.Null;
+		if (!SuccessfullySelectedPuck() || !IsDragDistBigEnough(dragVector))
 			return;
-		}
-
-		// TODO_Onboarding: Make the selected Slider begin sliding.
-		// The desired movementDirection is calculated for you.
-		// A copy of the SliderComponent is grabbed for you.
-		// The selected Slider is stored for you in the variable _selectedSlider
-		//EntityManager em = GetEm();
-		//SliderComponent sliderComp = em.GetComponentData<SliderComponent>(_selectedSlider);
-		//Vector3 movementDirection = GetMovementDirection(dragVector);
-		//sliderComp.SliderVelocity = sliderComp.MovementSpeed * movementDirection;
-		//GetEm().SetComponentData(_selectedSlider, sliderComp);
 		LevelManager.StartLevelWithChoice(_selectedPuck.GridPosition, GetMovementDirection(dragVector));
 		_selectedPuck = null;
 	}
@@ -97,7 +83,7 @@ public class PlayerSliderControl : MonoBehaviour {
 			: Vector3.zero;
 	}
 
-	bool SuccessfullySelectedPuck() => _selectedPuck != null; // _selectedSlider != Entity.Null;
+	bool SuccessfullySelectedPuck() => _selectedPuck != null;
 
 	bool IsDragDistBigEnough(Vector3 dragVector) => Vector3.SqrMagnitude(dragVector) >= Util.pow2(_dragDeadzone);
 
@@ -105,7 +91,5 @@ public class PlayerSliderControl : MonoBehaviour {
 		Mathf.Abs(dragVector.x) > Mathf.Abs(dragVector.y)
 		? (dragVector.x > 0 ? EPuckMovementDirection.Right : EPuckMovementDirection.Left)
 		: (dragVector.y > 0 ? EPuckMovementDirection.Up : EPuckMovementDirection.Down);
-
-	//EntityManager GetEm() => World.DefaultGameObjectInjectionWorld.EntityManager;
 
 }

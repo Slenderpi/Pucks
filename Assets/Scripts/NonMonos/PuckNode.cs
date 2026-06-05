@@ -4,6 +4,7 @@ namespace Pucks {
 	public class PuckNode {
 
 		public int Id { get; }
+
 		/// <summary>
 		/// IMPORTANT: stored as (x, y) = (row, col)
 		/// </summary>
@@ -15,6 +16,7 @@ namespace Pucks {
 			}
 		
 		}
+
 		public Vector2Int PreviousGridPosition { get; private set; }
 
 		Vector2Int _gridPos;
@@ -39,24 +41,13 @@ namespace Pucks {
 		/// Make this Puck update its GridPosition based on its current MovementDirection.
 		/// </summary>
 		/// <exception cref="UnityException">If the MovementDirection is not Up, Down, Left, or Right.</exception>
-		public void Move() {
-			switch (MovementDirection) {
-				case EPuckMovementDirection.Up:
-					GridPosition = new(GridPosition.x - 1, GridPosition.y);
-					break;
-				case EPuckMovementDirection.Down:
-					GridPosition = new(GridPosition.x + 1, GridPosition.y);
-					break;
-				case EPuckMovementDirection.Left:
-					GridPosition = new(GridPosition.x, GridPosition.y - 1);
-					break;
-				case EPuckMovementDirection.Right:
-					GridPosition = new(GridPosition.x, GridPosition.y + 1);
-					break;
-				default:
-					throw new UnityException("[PuckNode]: Move() was called on a Puck that shouldn't be moving.");
-			}
-		}
+		public void Move() => GridPosition = MovementDirection switch {
+			EPuckMovementDirection.Up => new(GridPosition.x - 1, GridPosition.y),
+			EPuckMovementDirection.Down => new(GridPosition.x + 1, GridPosition.y),
+			EPuckMovementDirection.Left => new(GridPosition.x, GridPosition.y - 1),
+			EPuckMovementDirection.Right => new(GridPosition.x, GridPosition.y + 1),
+			_ => throw new UnityException("[PuckNode]: Move() was called on a Puck that shouldn't be moving."),
+		};
 
 		/// <summary>
 		/// Returns the split type that would result if this moving Puck hit a stationary Puck.
