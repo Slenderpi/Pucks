@@ -103,7 +103,7 @@ public class LevelManager : MonoBehaviour {
 	private void Start() {
 		BindDebugActions();
 		GameManager.DebugActions.Enable();
-			GenerateLevel(1);
+			GenerateLevel(0);
 	}
 
 	private void Update() {
@@ -131,54 +131,6 @@ public class LevelManager : MonoBehaviour {
 		return Singleton._stationaryPucks.ContainsKey(point)
 			? Singleton._stationaryPucks[point]
 			: null;
-	}
-
-	StringBuilder GetChosenPositionsAsGridStringBuilder(Dictionary<Vector2Int, EPuckMovementDirection> chosenPositions) {
-		EPuckMovementDirection[,] grid = new EPuckMovementDirection[HeightCount, WidthCount];
-		foreach (var (pos, val) in chosenPositions)
-			grid[pos.x, pos.y] = val;
-		StringBuilder str = new("  ");
-		// Print col header
-		for (int i = 0; i < WidthCount; i++)
-			str.AppendFormat("{0,3}", i);
-		str.Append('\n');
-		// Print each row
-		for (int r = 0; r < HeightCount; r++) {
-			str.AppendFormat("{0,2}", r);
-			for (int c = 0; c < WidthCount; c++) {
-				str.Append("  ").Append(PuckUtil.PuckMovementToChar(grid[r, c]));
-			}
-			if (r < HeightCount - 1)
-				str.Append('\n');
-		}
-		return str;
-	}
-
-	void DetermineHorizontalRange(Vector2Int lastPoint, Dictionary<Vector2Int, EPuckMovementDirection> chosenPositions, out Vector2Int leftRange, out Vector2Int rightRange) {
-		int smallestLeft = lastPoint.y - 1;
-		int biggestRight = lastPoint.y + 1;
-		// Walk left to determine smallest left
-		while (smallestLeft - 1 >= 0 && !chosenPositions.ContainsKey(new(lastPoint.x, smallestLeft - 1)))
-			smallestLeft--;
-		// Walk right to determine biggest right
-		while (biggestRight + 1 < WidthCount && !chosenPositions.ContainsKey(new(lastPoint.x, biggestRight + 1)))
-			biggestRight++;
-		leftRange = new(smallestLeft, lastPoint.y - 1);
-		rightRange = new(lastPoint.y + 1, biggestRight);
-	}
-
-	void DetermineVerticalRange(Vector2Int lastPoint, Dictionary<Vector2Int, EPuckMovementDirection> chosenPositions, out Vector2Int upRange, out Vector2Int downRange) {
-		// In the grid, the Y axis expands downward. So going upward means y--, and downward y++
-		int highestUp = lastPoint.x - 1;
-		int lowestDown = lastPoint.x + 1;
-		// Walk up to determine highest up
-		while (highestUp - 1 >= 0 && !chosenPositions.ContainsKey(new(highestUp - 1, lastPoint.y)))
-			highestUp--;
-		// Walk down to determine lowest down
-		while (lowestDown + 1 < HeightCount && !chosenPositions.ContainsKey(new(lowestDown + 1, lastPoint.y)))
-			lowestDown++;
-		upRange = new(highestUp, lastPoint.x - 1);
-		downRange = new(lastPoint.x + 1, lowestDown);
 	}
 
 	public void GenerateLevel(int difficulty) {
@@ -464,6 +416,54 @@ public class LevelManager : MonoBehaviour {
 		_exitedPucks.Clear();
 		_activePuckMovers.Clear();
 		_puckPoolHeader = 0;
+	}
+
+	StringBuilder GetChosenPositionsAsGridStringBuilder(Dictionary<Vector2Int, EPuckMovementDirection> chosenPositions) {
+		EPuckMovementDirection[,] grid = new EPuckMovementDirection[HeightCount, WidthCount];
+		foreach (var (pos, val) in chosenPositions)
+			grid[pos.x, pos.y] = val;
+		StringBuilder str = new("  ");
+		// Print col header
+		for (int i = 0; i < WidthCount; i++)
+			str.AppendFormat("{0,3}", i);
+		str.Append('\n');
+		// Print each row
+		for (int r = 0; r < HeightCount; r++) {
+			str.AppendFormat("{0,2}", r);
+			for (int c = 0; c < WidthCount; c++) {
+				str.Append("  ").Append(PuckUtil.PuckMovementToChar(grid[r, c]));
+			}
+			if (r < HeightCount - 1)
+				str.Append('\n');
+		}
+		return str;
+	}
+
+	void DetermineHorizontalRange(Vector2Int lastPoint, Dictionary<Vector2Int, EPuckMovementDirection> chosenPositions, out Vector2Int leftRange, out Vector2Int rightRange) {
+		int smallestLeft = lastPoint.y - 1;
+		int biggestRight = lastPoint.y + 1;
+		// Walk left to determine smallest left
+		while (smallestLeft - 1 >= 0 && !chosenPositions.ContainsKey(new(lastPoint.x, smallestLeft - 1)))
+			smallestLeft--;
+		// Walk right to determine biggest right
+		while (biggestRight + 1 < WidthCount && !chosenPositions.ContainsKey(new(lastPoint.x, biggestRight + 1)))
+			biggestRight++;
+		leftRange = new(smallestLeft, lastPoint.y - 1);
+		rightRange = new(lastPoint.y + 1, biggestRight);
+	}
+
+	void DetermineVerticalRange(Vector2Int lastPoint, Dictionary<Vector2Int, EPuckMovementDirection> chosenPositions, out Vector2Int upRange, out Vector2Int downRange) {
+		// In the grid, the Y axis expands downward. So going upward means y--, and downward y++
+		int highestUp = lastPoint.x - 1;
+		int lowestDown = lastPoint.x + 1;
+		// Walk up to determine highest up
+		while (highestUp - 1 >= 0 && !chosenPositions.ContainsKey(new(highestUp - 1, lastPoint.y)))
+			highestUp--;
+		// Walk down to determine lowest down
+		while (lowestDown + 1 < HeightCount && !chosenPositions.ContainsKey(new(lowestDown + 1, lastPoint.y)))
+			lowestDown++;
+		upRange = new(highestUp, lastPoint.x - 1);
+		downRange = new(lastPoint.x + 1, lowestDown);
 	}
 
 	/// <summary>
