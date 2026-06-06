@@ -27,12 +27,12 @@ public class LevelManager : MonoBehaviour {
 	/// Number of columns in the level grid.
 	/// </summary>
 	[Min(5)]
-	public int WidthCount = 10;
+	public int WidthCount = 20;
 	/// <summary>
 	/// Number of rows in the level grid.
 	/// </summary>
 	[Min(5)]
-	public int HeightCount = 8;
+	public int HeightCount = 16;
 	/// <summary>
 	/// Physical size of a Puck.
 	/// </summary>
