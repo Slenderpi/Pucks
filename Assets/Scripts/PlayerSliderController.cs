@@ -7,7 +7,7 @@ public class PlayerSliderControl : MonoBehaviour {
 
 	[SerializeField]
 	[Tooltip("The mouse must be dragged a distance at least this value to be considered as selecting and moving a Slider.")]
-	float _dragDeadzone = 0.15f;
+	float _dragDeadzone = 0.33f;
 
 	bool _isDragging;
 	PuckNode _selectedPuck;
@@ -28,7 +28,7 @@ public class PlayerSliderControl : MonoBehaviour {
 			Vector3 mpos = GetMouseWorldPosition();
 			Vector3 dragVector = mpos - _mouseSelectStart;
 			if (SuccessfullySelectedPuck()) {
-				Vector3 puckPos = LevelManager.Singleton.PointToPosition(_selectedPuck.GridPosition);
+				Vector3 puckPos = LevelManager.Singleton.PointToPosition(_selectedPuck.GridPoint);
 				if (IsDragDistBigEnough(dragVector)) {
 					Util.D_DrawBox(puckPos, new(LevelManager.Singleton.PuckSize + 0.01f), Color.cyan); // slider
 					Util.D_DrawArrowFromTo(_mouseSelectStart, mpos, Color.green); // dragVector
@@ -55,7 +55,7 @@ public class PlayerSliderControl : MonoBehaviour {
 			if (p == null)
 				return;
 			Util.D_DrawBox(
-				LevelManager.Singleton.PointToPosition(p.GridPosition),
+				LevelManager.Singleton.PointToPosition(p.GridPoint),
 				LevelManager.Singleton.PuckSize + 0.01f, Color.red, 0, false
 			);
 		}
@@ -72,7 +72,7 @@ public class PlayerSliderControl : MonoBehaviour {
 		Vector3 dragVector = GetMouseWorldPosition() - _mouseSelectStart;
 		if (!SuccessfullySelectedPuck() || !IsDragDistBigEnough(dragVector))
 			return;
-		LevelManager.StartLevelWithChoice(_selectedPuck.GridPosition, GetMovementDirection(dragVector));
+		LevelManager.StartLevelWithChoice(_selectedPuck.GridPoint, GetMovementDirection(dragVector));
 		_selectedPuck = null;
 	}
 

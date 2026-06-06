@@ -44,5 +44,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dcfdd90b53aa3bf4980374c57d6ef7ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerSliderControl
-  _dragDeadzone: 0.15
-  _timeSlowTimeScale: 0.1
+  _dragDeadzone: 0.33

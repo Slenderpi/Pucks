@@ -31,7 +31,7 @@ namespace Pucks.Utilities {
 		/// </summary>
 		/// <param name="dict"></param>
 		public static void Add(this Dictionary<Vector2Int, PuckNode> dict, PuckNode puck) {
-			dict.Add(puck.GridPosition, puck);
+			dict.Add(puck.GridPoint, puck);
 		}
 	}
 }

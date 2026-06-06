@@ -1,12 +1,14 @@
 using Pucks;
 using Pucks.Utilities;
 using Slenderpi.Utilities;
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.Assertions;
 using UnityEngine.InputSystem;
 
 public class LevelManager : MonoBehaviour {
@@ -14,7 +16,7 @@ public class LevelManager : MonoBehaviour {
 	/// <summary>
 	/// The value should be set to something that is <= WidthCount * HeightCount
 	/// </summary>
-	const int PUCK_MOVER_POOL_SIZE = 20 * 16;
+	const int PUCK_MOVER_POOL_SIZE = 10 * 8;
 
 	public static LevelManager Singleton;
 
@@ -24,11 +26,13 @@ public class LevelManager : MonoBehaviour {
 	/// <summary>
 	/// Number of columns in the level grid.
 	/// </summary>
-	public int WidthCount = 20;
+	[Min(5)]
+	public int WidthCount = 10;
 	/// <summary>
 	/// Number of rows in the level grid.
 	/// </summary>
-	public int HeightCount = 16;
+	[Min(5)]
+	public int HeightCount = 8;
 	/// <summary>
 	/// Physical size of a Puck.
 	/// </summary>
@@ -45,7 +49,7 @@ public class LevelManager : MonoBehaviour {
 	/// <summary>
 	/// Consists of where the current level's Pucks start at.
 	/// </summary>
-	List<Vector2Int> _currentLevel = new();
+	readonly List<Vector2Int> _currentLevel = new();
 	/// <summary>
 	/// The position of the Solution puck
 	/// </summary>
@@ -61,20 +65,20 @@ public class LevelManager : MonoBehaviour {
 	/// <summary>
 	/// Contains all stationary Pucks, indexed by their grid position.
 	/// </summary>
-	Dictionary<Vector2Int, PuckNode> _stationaryPucks = new();
+	readonly Dictionary<Vector2Int, PuckNode> _stationaryPucks = new();
 	/// <summary>
 	/// Contains all moving Pucks.
 	/// </summary>
-	List<PuckNode> _movingPucks = new();
+	readonly List<PuckNode> _movingPucks = new();
 	/// <summary>
 	/// Contains all Pucks that have exited the level grid.
 	/// </summary>
-	List<PuckNode> _exitedPucks = new();
+	readonly List<PuckNode> _exitedPucks = new();
 	/// <summary>
 	/// Hashmap of currently active PuckMovers.
 	/// </summary>
-	Dictionary<PuckNode, PuckMover> _activePuckMovers = new();
-	List<PuckMover> _puckMoverPool = new();
+	readonly Dictionary<PuckNode, PuckMover> _activePuckMovers = new();
+	readonly List<PuckMover> _puckMoverPool = new();
 	int _puckPoolHeader = 0;
 
 	bool _hasLevelStarted = false;
@@ -129,11 +133,206 @@ public class LevelManager : MonoBehaviour {
 			: null;
 	}
 
+	StringBuilder GetChosenPositionsAsGridStringBuilder(Dictionary<Vector2Int, EPuckMovementDirection> chosenPositions) {
+		EPuckMovementDirection[,] grid = new EPuckMovementDirection[HeightCount, WidthCount];
+		foreach (var (pos, val) in chosenPositions)
+			grid[pos.x, pos.y] = val;
+		StringBuilder str = new("  ");
+		// Print col header
+		for (int i = 0; i < WidthCount; i++)
+			str.AppendFormat("{0,3}", i);
+		str.Append('\n');
+		// Print each row
+		for (int r = 0; r < HeightCount; r++) {
+			str.AppendFormat("{0,2}", r);
+			for (int c = 0; c < WidthCount; c++) {
+				str.Append("  ").Append(PuckUtil.PuckMovementToChar(grid[r, c]));
+			}
+			if (r < HeightCount - 1)
+				str.Append('\n');
+		}
+		return str;
+	}
+
+	void DetermineHorizontalRange(Vector2Int lastPoint, Dictionary<Vector2Int, EPuckMovementDirection> chosenPositions, out Vector2Int leftRange, out Vector2Int rightRange) {
+		int smallestLeft = lastPoint.y - 1;
+		int biggestRight = lastPoint.y + 1;
+		// Walk left to determine smallest left
+		while (smallestLeft - 1 >= 0 && !chosenPositions.ContainsKey(new(lastPoint.x, smallestLeft - 1)))
+			smallestLeft--;
+		// Walk right to determine biggest right
+		while (biggestRight + 1 < WidthCount && !chosenPositions.ContainsKey(new(lastPoint.x, biggestRight + 1)))
+			biggestRight++;
+		leftRange = new(smallestLeft, lastPoint.y - 1);
+		rightRange = new(lastPoint.y + 1, biggestRight);
+	}
+
+	void DetermineVerticalRange(Vector2Int lastPoint, Dictionary<Vector2Int, EPuckMovementDirection> chosenPositions, out Vector2Int upRange, out Vector2Int downRange) {
+		// In the grid, the Y axis expands downward. So going upward means y--, and downward y++
+		int highestUp = lastPoint.x - 1;
+		int lowestDown = lastPoint.x + 1;
+		// Walk up to determine highest up
+		while (highestUp - 1 >= 0 && !chosenPositions.ContainsKey(new(highestUp - 1, lastPoint.y)))
+			highestUp--;
+		// Walk down to determine lowest down
+		while (lowestDown + 1 < HeightCount && !chosenPositions.ContainsKey(new(lowestDown + 1, lastPoint.y)))
+			lowestDown++;
+		upRange = new(highestUp, lastPoint.x - 1);
+		downRange = new(lastPoint.x + 1, lowestDown);
+	}
+
 	public void GenerateLevel(int difficulty) {
+		Assert.IsTrue(difficulty >= 0, $"[LevelManager]: GeneratedLevel() was given an invalid difficulty value of {difficulty}.");
+
 		_currentLevel.Clear();
 		_difficulty = difficulty;
 
-		// TODO
+		Dictionary<Vector2Int, EPuckMovementDirection> chosenPositions = new();
+		Vector2Int lastPoint = new(UnityEngine.Random.Range(2, HeightCount - 3), UnityEngine.Random.Range(2, WidthCount - 3));
+		// If |, that means it desires an instigator of ^ or v, and that its children to hit are < and >. That is, we create <|> or ^-v
+		EPuckMovementDirection lastSplitDir = Util.UnityRandomBool() ? EPuckMovementDirection.SplitHorizontal : EPuckMovementDirection.SplitVertical;
+
+		Debug.Log($"[LevelManager]: GENERATE BEGIN | lastPoint: {lastPoint} | lastSplitDir: {PuckUtil.PuckMovementToChar(lastSplitDir)}");
+
+		chosenPositions.Add(lastPoint, lastSplitDir);
+		for (int i = difficulty; i > 0; i--) {
+			Vector2Int sibling;
+			EPuckMovementDirection siblingInputHitDir;
+			Vector2Int parent;
+			EPuckMovementDirection parentSplitDir;
+			if (lastSplitDir == EPuckMovementDirection.SplitHorizontal) {
+				// Walk left and right
+				// Choose left/right based on greater space
+				// Create sibling right/left and parent middle
+				// Set parent middle to - and lastPoint to middle
+				DetermineHorizontalRange(lastPoint, chosenPositions, out Vector2Int leftRange, out Vector2Int rightRange);
+
+				// Determine range for sibling and parent Pucks. The range is [min, max]
+				bool useLeftSide = leftRange.y - leftRange.x > rightRange.y - rightRange.x;
+				if ((useLeftSide ? leftRange.y - leftRange.x : rightRange.y - rightRange.x) < 1) {
+					Debug.LogWarning($"Can't fit iteration {i}! lastPoint: {lastPoint} | Split dir: '{PuckUtil.PuckMovementToChar(lastSplitDir)}' | Ranges: ({leftRange}), ({rightRange})");
+					break;
+				}
+				if (useLeftSide) {
+					sibling = new(lastPoint.x, UnityEngine.Random.Range(leftRange.x, leftRange.y - 1));
+					siblingInputHitDir = EPuckMovementDirection.Left;
+					parent = new(lastPoint.x, UnityEngine.Random.Range(sibling.y + 1, lastPoint.y - 1));
+				} else {
+					sibling = new(lastPoint.x, UnityEngine.Random.Range(rightRange.x + 1, rightRange.y));
+					siblingInputHitDir = EPuckMovementDirection.Right;
+					parent = new(lastPoint.x, UnityEngine.Random.Range(lastPoint.y + 1, sibling.y - 1));
+				}
+				parentSplitDir = EPuckMovementDirection.SplitVertical;
+				chosenPositions[lastPoint] = useLeftSide ? EPuckMovementDirection.Right : EPuckMovementDirection.Left;
+			} else {
+				// Walk up and down
+				// Choose up/down based on greater space
+				// Create sibling down/up and parent middle
+				// Set parent middle to - and lastPoint to middle
+				// In the grid, the Y axis expands downward. So going upward means y--, and downward y++
+				DetermineVerticalRange(lastPoint, chosenPositions, out Vector2Int upRange, out Vector2Int downRange);
+
+				// Determine range for sibling and parent Pucks. The range is [min, max]
+				bool useUpSide = upRange.y - upRange.x > downRange.y - downRange.x;
+				if ((useUpSide ? upRange.y - upRange.x : downRange.y - downRange.x) < 1) {
+					Debug.LogWarning($"Can't fit iteration {i}! lastPoint: {lastPoint} | Split dir: '{PuckUtil.PuckMovementToChar(lastSplitDir)}' | Ranges: ({upRange}), ({downRange})");
+					break;
+				}
+				if (useUpSide) {
+					sibling = new(UnityEngine.Random.Range(upRange.x, upRange.y - 1), lastPoint.y);
+					siblingInputHitDir = EPuckMovementDirection.Up;
+					parent = new(UnityEngine.Random.Range(sibling.x + 1, lastPoint.x - 1), lastPoint.y);
+				} else {
+					sibling = new(UnityEngine.Random.Range(downRange.x + 1, downRange.y), lastPoint.y);
+					siblingInputHitDir = EPuckMovementDirection.Down;
+					parent = new(UnityEngine.Random.Range(lastPoint.x + 1, sibling.x - 1), lastPoint.y);
+				}
+				parentSplitDir = EPuckMovementDirection.SplitHorizontal;
+				chosenPositions[lastPoint] = useUpSide ? EPuckMovementDirection.Down : EPuckMovementDirection.Up;
+			}
+
+			chosenPositions.Add(sibling, siblingInputHitDir);
+			chosenPositions.Add(parent, parentSplitDir);
+
+			lastPoint = parent;
+			lastSplitDir = parentSplitDir;
+
+			{
+				StringBuilder str = new($"[LevelManager]: GENERATE ({difficulty}) | iteration: {i}");
+				str.Append('\n').Append(GetChosenPositionsAsGridStringBuilder(chosenPositions));
+				Debug.Log(str.ToString());
+			}
+		}
+
+		// Now create answer Puck
+		if (lastSplitDir == EPuckMovementDirection.SplitHorizontal) {
+			DetermineHorizontalRange(lastPoint, chosenPositions, out Vector2Int leftRange, out Vector2Int rightRange);
+			bool useLeft = Util.UnityRandomBool();
+			Debug.Log("lastSplitDir was HORIZONTAL");
+			if (useLeft) {
+				_solutionPosition = new(lastPoint.x, UnityEngine.Random.Range(leftRange.x, leftRange.y));
+				_solutionDirection = EPuckMovementDirection.Right;
+			} else {
+				_solutionPosition = new(lastPoint.x, UnityEngine.Random.Range(rightRange.x, rightRange.y));
+				_solutionDirection = EPuckMovementDirection.Left;
+			}
+			if (chosenPositions.ContainsKey(_solutionPosition)) {
+				// Try other side
+				if (!useLeft) {
+					_solutionPosition = new(lastPoint.x, UnityEngine.Random.Range(leftRange.x, leftRange.y));
+					_solutionDirection = EPuckMovementDirection.Right;
+				} else {
+					_solutionPosition = new(lastPoint.x, UnityEngine.Random.Range(rightRange.x, rightRange.y));
+					_solutionDirection = EPuckMovementDirection.Left;
+				}
+				if (chosenPositions.ContainsKey(_solutionPosition))
+					Debug.LogWarning("[LevelManager]: The final Puck does not have space to be given an answer Puck.");
+			}
+		} else {
+			DetermineVerticalRange(lastPoint, chosenPositions, out Vector2Int upRange, out Vector2Int downRange);
+			bool useUp = Util.UnityRandomBool();
+			Debug.Log("lastSplitDir was VERTICAL");
+			if (useUp) {
+				_solutionPosition = new(UnityEngine.Random.Range(upRange.x, upRange.y), lastPoint.y);
+				_solutionDirection = EPuckMovementDirection.Down;
+				Debug.Log("1: useUp");
+			} else {
+				_solutionPosition = new(UnityEngine.Random.Range(downRange.x, downRange.y), lastPoint.y);
+				_solutionDirection = EPuckMovementDirection.Up;
+				Debug.Log("1: useDown");
+			}
+			if (chosenPositions.ContainsKey(_solutionPosition)) {
+				// Try other side
+				if (!useUp) {
+					_solutionPosition = new(UnityEngine.Random.Range(upRange.x, upRange.y), lastPoint.y);
+					_solutionDirection = EPuckMovementDirection.Down;
+					Debug.Log("2: useUp");
+				} else {
+					_solutionPosition = new(UnityEngine.Random.Range(downRange.x, downRange.y), lastPoint.y);
+					_solutionDirection = EPuckMovementDirection.Up;
+					Debug.Log("2: useDown");
+				}
+				if (chosenPositions.ContainsKey(_solutionPosition))
+					Debug.LogWarning("[LevelManager]: The final Puck does not have space to be given an answer Puck.");
+			}
+		}
+		chosenPositions.Add(_solutionPosition, _solutionDirection);
+
+		{
+			StringBuilder str = new($"[LevelManager]: GENERATE ({difficulty}) | iteration: {0}");
+			str.Append('\n').Append(GetChosenPositionsAsGridStringBuilder(chosenPositions));
+			Debug.Log(str.ToString());
+		}
+
+
+
+
+		foreach (var (pos, _) in chosenPositions)
+			_currentLevel.Add(pos);
+
+
+
+
 
 		// temporary hardcoded level for testing)
 
@@ -143,16 +342,16 @@ public class LevelManager : MonoBehaviour {
 		//_solutionPosition = new(0, );
 		//_solutionDirection = EPuckMovementDirection.Right;
 
-		_currentLevel.Add(new(8, 2));
-		_currentLevel.Add(new(0, 10));
-		_currentLevel.Add(new(8, 10));
-		_currentLevel.Add(new(10, 10));
-		_currentLevel.Add(new(0, 5));
-		_currentLevel.Add(new(5, 5));
-		_currentLevel.Add(new(5, 0));
-		_currentLevel.Add(new(5, 7));
-		_solutionPosition = new(8, 2);
-		_solutionDirection = EPuckMovementDirection.Right;
+		//_currentLevel.Add(new(8, 2));
+		//_currentLevel.Add(new(0, 10));
+		//_currentLevel.Add(new(8, 10));
+		//_currentLevel.Add(new(10, 10));
+		//_currentLevel.Add(new(0, 5));
+		//_currentLevel.Add(new(5, 5));
+		//_currentLevel.Add(new(5, 0));
+		//_currentLevel.Add(new(5, 7));
+		//_solutionPosition = new(8, 2);
+		//_solutionDirection = EPuckMovementDirection.Right;
 
 		//_currentLevel.Add(new(0, 5));
 		//_currentLevel.Add(new(1, 5));
@@ -195,13 +394,13 @@ public class LevelManager : MonoBehaviour {
 		for (int i = 0; i < numMovingPucks; i++) {
 			PuckNode p = _movingPucks[i];
 			p.Move();
-			if (_stationaryPucks.ContainsKey(p.GridPosition)) {
+			if (_stationaryPucks.ContainsKey(p.GridPoint)) {
 				if (p.GetSplitDirection() == EPuckMovementDirection.SplitHorizontal) {
 					p.MovementDirection = EPuckMovementDirection.Left;
-					MoveStationaryPuck(p.GridPosition, EPuckMovementDirection.Right);
+					MoveStationaryPuck(p.GridPoint, EPuckMovementDirection.Right);
 				} else {
 					p.MovementDirection = EPuckMovementDirection.Up;
-					MoveStationaryPuck(p.GridPosition, EPuckMovementDirection.Down);
+					MoveStationaryPuck(p.GridPoint, EPuckMovementDirection.Down);
 				}
 			}
 		}
@@ -235,7 +434,7 @@ public class LevelManager : MonoBehaviour {
 		// Bind PuckMovers
 		foreach (var (_, pn) in _stationaryPucks) {
 			PuckMover pm = SpawnPuckMover();
-			pm.transform.position = PointToPosition(pn.GridPosition);
+			pm.transform.position = PointToPosition(pn.GridPoint);
 			pm.gameObject.SetActive(true);
 			_activePuckMovers.Add(pn, pm);
 		}
@@ -305,10 +504,29 @@ public class LevelManager : MonoBehaviour {
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	bool HasPuckExitedGrid(PuckNode puck) => puck.GridPosition.x < 0 || puck.GridPosition.x >= HeightCount || puck.GridPosition.y < 0 || puck.GridPosition.y >= WidthCount;
+	bool HasPuckExitedGrid(PuckNode puck) => puck.GridPoint.x < 0 || puck.GridPoint.x >= HeightCount || puck.GridPoint.y < 0 || puck.GridPoint.y >= WidthCount;
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	void TestSolution() => StartLevelWithChoice(_solutionPosition, _solutionDirection);
+
+	//StringBuilder GetGeneratedLevelGridStringBuilder() {
+	//	EPuckMovementDirection[,] grid = GetGeneratedLevelAs2dArray();
+	//	StringBuilder str = new("  ");
+	//	// Print col header
+	//	for (int i = 0; i < WidthCount; i++)
+	//		str.AppendFormat("{0,3}", i);
+	//	str.Append('\n');
+	//	// Print each row
+	//	for (int r = 0; r < HeightCount; r++) {
+	//		str.AppendFormat("{0,2}", r);
+	//		for (int c = 0; c < WidthCount; c++) {
+	//			str.Append("  ").Append(PuckUtil.PuckMovementToChar(grid[r, c]));
+	//		}
+	//		if (r < HeightCount - 1)
+	//			str.Append('\n');
+	//	}
+	//	return str;
+	//}
 
 	/// <summary>
 	/// Get the current level as a string representation but still in its StringBuilder form.<br/>
@@ -396,8 +614,19 @@ public class LevelManager : MonoBehaviour {
 	public void PrintLevel() => Debug.Log(GetLevelString());
 
 	private void BindDebugActions() {
-		GameManager.DebugActions.ResetLevel.started += OnResetLevelActionStarted;
-		GameManager.DebugActions.StepPucks.started += OnStepPucksActionStarted;
+		var da = GameManager.DebugActions;
+		da.ResetLevel.started += OnResetLevelActionStarted;
+		da.StepPucks.started += OnStepPucksActionStarted;
+		da.GenerateLevel0.started += _ => GenerateLevel(0);
+		da.GenerateLevel1.started += _ => GenerateLevel(1);
+		da.GenerateLevel2.started += _ => GenerateLevel(2);
+		da.GenerateLevel3.started += _ => GenerateLevel(3);
+		da.GenerateLevel4.started += _ => GenerateLevel(4);
+		da.GenerateLevel5.started += _ => GenerateLevel(5);
+		da.GenerateLevel6.started += _ => GenerateLevel(6);
+		da.GenerateLevel7.started += _ => GenerateLevel(7);
+		da.GenerateLevel8.started += _ => GenerateLevel(8);
+		da.GenerateLevel9.started += _ => GenerateLevel(9);
 	}
 
 	private void OnResetLevelActionStarted(InputAction.CallbackContext context) {
@@ -427,8 +656,8 @@ public class LevelManager : MonoBehaviour {
 	}
 
 	Vector3 GetLerpedPosition(PuckNode p) => Vector3.Lerp(
-		PointToPosition(p.PreviousGridPosition),
-		PointToPosition(p.GridPosition),
+		PointToPosition(p.PreviousGridPoint),
+		PointToPosition(p.GridPoint),
 		_timeSinceLastStep / StepUpdateDelay
 	);
 
@@ -441,17 +670,45 @@ public class LevelManager : MonoBehaviour {
 			grid[pos.x, pos.y] = puck.MovementDirection;
 		}
 		foreach (var puck in _movingPucks) {
-			switch (grid[puck.GridPosition.x, puck.GridPosition.y]) {
+			switch (grid[puck.GridPoint.x, puck.GridPoint.y]) {
 				case EPuckMovementDirection.Up:
 				case EPuckMovementDirection.Down:
-					grid[puck.GridPosition.x, puck.GridPosition.y] = EPuckMovementDirection.SplitVertical;
+					grid[puck.GridPoint.x, puck.GridPoint.y] = EPuckMovementDirection.SplitVertical;
 					break;
 				case EPuckMovementDirection.Left:
 				case EPuckMovementDirection.Right:
-					grid[puck.GridPosition.x, puck.GridPosition.y] = EPuckMovementDirection.SplitHorizontal;
+					grid[puck.GridPoint.x, puck.GridPoint.y] = EPuckMovementDirection.SplitHorizontal;
 					break;
 				case EPuckMovementDirection.None:
-					grid[puck.GridPosition.x, puck.GridPosition.y] = puck.MovementDirection;
+					grid[puck.GridPoint.x, puck.GridPoint.y] = puck.MovementDirection;
+					break;
+				default:
+					break;
+			}
+		}
+		return grid;
+	}
+
+	/// <summary>
+	/// Creates a 2d array representing the current generated level.
+	/// </summary>
+	EPuckMovementDirection[,] GetGeneratedLevelAs2dArray() {
+		EPuckMovementDirection[,] grid = new EPuckMovementDirection[HeightCount, WidthCount];
+		foreach (var (pos, puck) in _stationaryPucks) {
+			grid[pos.x, pos.y] = puck.MovementDirection;
+		}
+		foreach (var puck in _movingPucks) {
+			switch (grid[puck.GridPoint.x, puck.GridPoint.y]) {
+				case EPuckMovementDirection.Up:
+				case EPuckMovementDirection.Down:
+					grid[puck.GridPoint.x, puck.GridPoint.y] = EPuckMovementDirection.SplitVertical;
+					break;
+				case EPuckMovementDirection.Left:
+				case EPuckMovementDirection.Right:
+					grid[puck.GridPoint.x, puck.GridPoint.y] = EPuckMovementDirection.SplitHorizontal;
+					break;
+				case EPuckMovementDirection.None:
+					grid[puck.GridPoint.x, puck.GridPoint.y] = puck.MovementDirection;
 					break;
 				default:
 					break;

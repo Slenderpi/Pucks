@@ -8,16 +8,16 @@ namespace Pucks {
 		/// <summary>
 		/// IMPORTANT: stored as (x, y) = (row, col)
 		/// </summary>
-		public Vector2Int GridPosition {
+		public Vector2Int GridPoint {
 			get => _gridPos;
 			set {
-				PreviousGridPosition = GridPosition;
+				PreviousGridPoint = GridPoint;
 				_gridPos = value;
 			}
 		
 		}
 
-		public Vector2Int PreviousGridPosition { get; private set; }
+		public Vector2Int PreviousGridPoint { get; private set; }
 
 		Vector2Int _gridPos;
 		
@@ -31,8 +31,8 @@ namespace Pucks {
 
 
 		public PuckNode(int row=0, int col=0, EPuckMovementDirection moveDir=EPuckMovementDirection.Stationary) {
-			GridPosition = new(row, col);
-			PreviousGridPosition = GridPosition;
+			GridPoint = new(row, col);
+			PreviousGridPoint = GridPoint;
 			MovementDirection = moveDir;
 			Id = GenerateId();
 		}
@@ -41,11 +41,11 @@ namespace Pucks {
 		/// Make this Puck update its GridPosition based on its current MovementDirection.
 		/// </summary>
 		/// <exception cref="UnityException">If the MovementDirection is not Up, Down, Left, or Right.</exception>
-		public void Move() => GridPosition = MovementDirection switch {
-			EPuckMovementDirection.Up => new(GridPosition.x - 1, GridPosition.y),
-			EPuckMovementDirection.Down => new(GridPosition.x + 1, GridPosition.y),
-			EPuckMovementDirection.Left => new(GridPosition.x, GridPosition.y - 1),
-			EPuckMovementDirection.Right => new(GridPosition.x, GridPosition.y + 1),
+		public void Move() => GridPoint = MovementDirection switch {
+			EPuckMovementDirection.Up => new(GridPoint.x - 1, GridPoint.y),
+			EPuckMovementDirection.Down => new(GridPoint.x + 1, GridPoint.y),
+			EPuckMovementDirection.Left => new(GridPoint.x, GridPoint.y - 1),
+			EPuckMovementDirection.Right => new(GridPoint.x, GridPoint.y + 1),
 			_ => throw new UnityException("[PuckNode]: Move() was called on a Puck that shouldn't be moving."),
 		};
 

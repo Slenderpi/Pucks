@@ -109,6 +109,96 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""GenerateLevel0"",
+                    ""type"": ""Button"",
+                    ""id"": ""40ef68f8-0a66-4827-a786-840dc6a64cbc"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""GenerateLevel1"",
+                    ""type"": ""Button"",
+                    ""id"": ""5a1367d2-c8bf-4f05-b160-2713a6440e74"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""GenerateLevel2"",
+                    ""type"": ""Button"",
+                    ""id"": ""6cedd6f9-78c3-4a55-a1ae-aa0c26357928"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""GenerateLevel3"",
+                    ""type"": ""Button"",
+                    ""id"": ""589711a4-f3ae-438d-95d9-771cafbede1b"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""GenerateLevel4"",
+                    ""type"": ""Button"",
+                    ""id"": ""702104d0-ea48-4733-bb31-fc5c33e988d9"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""GenerateLevel5"",
+                    ""type"": ""Button"",
+                    ""id"": ""0b562bab-949d-4740-bfbc-57ab5987cf14"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""GenerateLevel6"",
+                    ""type"": ""Button"",
+                    ""id"": ""28b14191-e782-4f6f-84cf-5b59abcfc661"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""GenerateLevel7"",
+                    ""type"": ""Button"",
+                    ""id"": ""1b34efa3-427e-4761-9d6d-a7b83dfa7142"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""GenerateLevel8"",
+                    ""type"": ""Button"",
+                    ""id"": ""4ea6acd1-8ca0-41ee-ace9-3a51bacdeed1"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""GenerateLevel9"",
+                    ""type"": ""Button"",
+                    ""id"": ""ef7f3c92-4786-4cd6-b1ce-429b2f083b55"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -131,6 +221,226 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""ResetLevel"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""e6a38c03-c58f-46f6-b35d-f9519068d79a"",
+                    ""path"": ""<Keyboard>/0"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""GenerateLevel0"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""afcfb605-f831-4e9f-9c61-b366601ba8e2"",
+                    ""path"": ""<Keyboard>/numpad0"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""GenerateLevel0"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""7b51f1f5-e28d-4ae8-8fd6-4e8fedcc6e8e"",
+                    ""path"": ""<Keyboard>/1"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""GenerateLevel1"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""75e3b9ca-e7e1-48f0-a0a0-6280c19e58b8"",
+                    ""path"": ""<Keyboard>/numpad1"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""GenerateLevel1"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""e287e2a4-2113-44ef-83d6-61675133be89"",
+                    ""path"": ""<Keyboard>/2"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""GenerateLevel2"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""5cc5a138-581e-485a-b5a3-2dfbd531e71a"",
+                    ""path"": ""<Keyboard>/numpad2"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""GenerateLevel2"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""54f4e05b-7e71-4c43-8121-da5c808a5984"",
+                    ""path"": ""<Keyboard>/3"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""GenerateLevel3"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""9a28f8a5-516e-44f8-8ba6-ebbd6589f31c"",
+                    ""path"": ""<Keyboard>/numpad3"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""GenerateLevel3"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""8c8366e7-0a82-4f05-a983-6b5fa5cdac1f"",
+                    ""path"": ""<Keyboard>/4"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""GenerateLevel4"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""074658dc-e881-4ca4-95f2-2d7e7239e6fd"",
+                    ""path"": ""<Keyboard>/numpad4"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""GenerateLevel4"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""267d11d4-6c80-4cfd-a077-7a8cdbb9a28d"",
+                    ""path"": ""<Keyboard>/5"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""GenerateLevel5"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""d85e97b2-4ecd-48cb-bf0d-f7ee7e34315c"",
+                    ""path"": ""<Keyboard>/numpad5"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""GenerateLevel5"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""945d32e3-70b9-4d8c-bb6d-f182d349571d"",
+                    ""path"": ""<Keyboard>/6"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""GenerateLevel6"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""5edcff71-d500-48f4-b8b9-725d9158638e"",
+                    ""path"": ""<Keyboard>/numpad6"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""GenerateLevel6"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""e212dead-7185-4825-bdc6-2e9c1d1ba6ed"",
+                    ""path"": ""<Keyboard>/7"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""GenerateLevel7"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""2bd2c134-1d9a-4d81-857c-8776cd4b0d91"",
+                    ""path"": ""<Keyboard>/numpad7"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""GenerateLevel7"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""832bb653-06e7-4e80-a8f5-19589a6a124e"",
+                    ""path"": ""<Keyboard>/8"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""GenerateLevel8"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""0aae554c-4fa1-4c94-897b-f12202acf3e3"",
+                    ""path"": ""<Keyboard>/numpad8"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""GenerateLevel8"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""d58131cd-45c6-4cab-9970-def4545341a3"",
+                    ""path"": ""<Keyboard>/9"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""GenerateLevel9"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""f396086e-be1c-4685-a4db-ec6ebc1c58a6"",
+                    ""path"": ""<Keyboard>/numpad9"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""GenerateLevel9"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -1222,6 +1532,16 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         m_Debug = asset.FindActionMap("Debug", throwIfNotFound: true);
         m_Debug_ResetLevel = m_Debug.FindAction("ResetLevel", throwIfNotFound: true);
         m_Debug_StepPucks = m_Debug.FindAction("StepPucks", throwIfNotFound: true);
+        m_Debug_GenerateLevel0 = m_Debug.FindAction("GenerateLevel0", throwIfNotFound: true);
+        m_Debug_GenerateLevel1 = m_Debug.FindAction("GenerateLevel1", throwIfNotFound: true);
+        m_Debug_GenerateLevel2 = m_Debug.FindAction("GenerateLevel2", throwIfNotFound: true);
+        m_Debug_GenerateLevel3 = m_Debug.FindAction("GenerateLevel3", throwIfNotFound: true);
+        m_Debug_GenerateLevel4 = m_Debug.FindAction("GenerateLevel4", throwIfNotFound: true);
+        m_Debug_GenerateLevel5 = m_Debug.FindAction("GenerateLevel5", throwIfNotFound: true);
+        m_Debug_GenerateLevel6 = m_Debug.FindAction("GenerateLevel6", throwIfNotFound: true);
+        m_Debug_GenerateLevel7 = m_Debug.FindAction("GenerateLevel7", throwIfNotFound: true);
+        m_Debug_GenerateLevel8 = m_Debug.FindAction("GenerateLevel8", throwIfNotFound: true);
+        m_Debug_GenerateLevel9 = m_Debug.FindAction("GenerateLevel9", throwIfNotFound: true);
         // Player
         m_Player = asset.FindActionMap("Player", throwIfNotFound: true);
         m_Player_SelectSlider = m_Player.FindAction("SelectSlider", throwIfNotFound: true);
@@ -1333,6 +1653,16 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
     private List<IDebugActions> m_DebugActionsCallbackInterfaces = new List<IDebugActions>();
     private readonly InputAction m_Debug_ResetLevel;
     private readonly InputAction m_Debug_StepPucks;
+    private readonly InputAction m_Debug_GenerateLevel0;
+    private readonly InputAction m_Debug_GenerateLevel1;
+    private readonly InputAction m_Debug_GenerateLevel2;
+    private readonly InputAction m_Debug_GenerateLevel3;
+    private readonly InputAction m_Debug_GenerateLevel4;
+    private readonly InputAction m_Debug_GenerateLevel5;
+    private readonly InputAction m_Debug_GenerateLevel6;
+    private readonly InputAction m_Debug_GenerateLevel7;
+    private readonly InputAction m_Debug_GenerateLevel8;
+    private readonly InputAction m_Debug_GenerateLevel9;
     /// <summary>
     /// Provides access to input actions defined in input action map "Debug".
     /// </summary>
@@ -1352,6 +1682,46 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Debug/StepPucks".
         /// </summary>
         public InputAction @StepPucks => m_Wrapper.m_Debug_StepPucks;
+        /// <summary>
+        /// Provides access to the underlying input action "Debug/GenerateLevel0".
+        /// </summary>
+        public InputAction @GenerateLevel0 => m_Wrapper.m_Debug_GenerateLevel0;
+        /// <summary>
+        /// Provides access to the underlying input action "Debug/GenerateLevel1".
+        /// </summary>
+        public InputAction @GenerateLevel1 => m_Wrapper.m_Debug_GenerateLevel1;
+        /// <summary>
+        /// Provides access to the underlying input action "Debug/GenerateLevel2".
+        /// </summary>
+        public InputAction @GenerateLevel2 => m_Wrapper.m_Debug_GenerateLevel2;
+        /// <summary>
+        /// Provides access to the underlying input action "Debug/GenerateLevel3".
+        /// </summary>
+        public InputAction @GenerateLevel3 => m_Wrapper.m_Debug_GenerateLevel3;
+        /// <summary>
+        /// Provides access to the underlying input action "Debug/GenerateLevel4".
+        /// </summary>
+        public InputAction @GenerateLevel4 => m_Wrapper.m_Debug_GenerateLevel4;
+        /// <summary>
+        /// Provides access to the underlying input action "Debug/GenerateLevel5".
+        /// </summary>
+        public InputAction @GenerateLevel5 => m_Wrapper.m_Debug_GenerateLevel5;
+        /// <summary>
+        /// Provides access to the underlying input action "Debug/GenerateLevel6".
+        /// </summary>
+        public InputAction @GenerateLevel6 => m_Wrapper.m_Debug_GenerateLevel6;
+        /// <summary>
+        /// Provides access to the underlying input action "Debug/GenerateLevel7".
+        /// </summary>
+        public InputAction @GenerateLevel7 => m_Wrapper.m_Debug_GenerateLevel7;
+        /// <summary>
+        /// Provides access to the underlying input action "Debug/GenerateLevel8".
+        /// </summary>
+        public InputAction @GenerateLevel8 => m_Wrapper.m_Debug_GenerateLevel8;
+        /// <summary>
+        /// Provides access to the underlying input action "Debug/GenerateLevel9".
+        /// </summary>
+        public InputAction @GenerateLevel9 => m_Wrapper.m_Debug_GenerateLevel9;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -1384,6 +1754,36 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @StepPucks.started += instance.OnStepPucks;
             @StepPucks.performed += instance.OnStepPucks;
             @StepPucks.canceled += instance.OnStepPucks;
+            @GenerateLevel0.started += instance.OnGenerateLevel0;
+            @GenerateLevel0.performed += instance.OnGenerateLevel0;
+            @GenerateLevel0.canceled += instance.OnGenerateLevel0;
+            @GenerateLevel1.started += instance.OnGenerateLevel1;
+            @GenerateLevel1.performed += instance.OnGenerateLevel1;
+            @GenerateLevel1.canceled += instance.OnGenerateLevel1;
+            @GenerateLevel2.started += instance.OnGenerateLevel2;
+            @GenerateLevel2.performed += instance.OnGenerateLevel2;
+            @GenerateLevel2.canceled += instance.OnGenerateLevel2;
+            @GenerateLevel3.started += instance.OnGenerateLevel3;
+            @GenerateLevel3.performed += instance.OnGenerateLevel3;
+            @GenerateLevel3.canceled += instance.OnGenerateLevel3;
+            @GenerateLevel4.started += instance.OnGenerateLevel4;
+            @GenerateLevel4.performed += instance.OnGenerateLevel4;
+            @GenerateLevel4.canceled += instance.OnGenerateLevel4;
+            @GenerateLevel5.started += instance.OnGenerateLevel5;
+            @GenerateLevel5.performed += instance.OnGenerateLevel5;
+            @GenerateLevel5.canceled += instance.OnGenerateLevel5;
+            @GenerateLevel6.started += instance.OnGenerateLevel6;
+            @GenerateLevel6.performed += instance.OnGenerateLevel6;
+            @GenerateLevel6.canceled += instance.OnGenerateLevel6;
+            @GenerateLevel7.started += instance.OnGenerateLevel7;
+            @GenerateLevel7.performed += instance.OnGenerateLevel7;
+            @GenerateLevel7.canceled += instance.OnGenerateLevel7;
+            @GenerateLevel8.started += instance.OnGenerateLevel8;
+            @GenerateLevel8.performed += instance.OnGenerateLevel8;
+            @GenerateLevel8.canceled += instance.OnGenerateLevel8;
+            @GenerateLevel9.started += instance.OnGenerateLevel9;
+            @GenerateLevel9.performed += instance.OnGenerateLevel9;
+            @GenerateLevel9.canceled += instance.OnGenerateLevel9;
         }
 
         /// <summary>
@@ -1401,6 +1801,36 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @StepPucks.started -= instance.OnStepPucks;
             @StepPucks.performed -= instance.OnStepPucks;
             @StepPucks.canceled -= instance.OnStepPucks;
+            @GenerateLevel0.started -= instance.OnGenerateLevel0;
+            @GenerateLevel0.performed -= instance.OnGenerateLevel0;
+            @GenerateLevel0.canceled -= instance.OnGenerateLevel0;
+            @GenerateLevel1.started -= instance.OnGenerateLevel1;
+            @GenerateLevel1.performed -= instance.OnGenerateLevel1;
+            @GenerateLevel1.canceled -= instance.OnGenerateLevel1;
+            @GenerateLevel2.started -= instance.OnGenerateLevel2;
+            @GenerateLevel2.performed -= instance.OnGenerateLevel2;
+            @GenerateLevel2.canceled -= instance.OnGenerateLevel2;
+            @GenerateLevel3.started -= instance.OnGenerateLevel3;
+            @GenerateLevel3.performed -= instance.OnGenerateLevel3;
+            @GenerateLevel3.canceled -= instance.OnGenerateLevel3;
+            @GenerateLevel4.started -= instance.OnGenerateLevel4;
+            @GenerateLevel4.performed -= instance.OnGenerateLevel4;
+            @GenerateLevel4.canceled -= instance.OnGenerateLevel4;
+            @GenerateLevel5.started -= instance.OnGenerateLevel5;
+            @GenerateLevel5.performed -= instance.OnGenerateLevel5;
+            @GenerateLevel5.canceled -= instance.OnGenerateLevel5;
+            @GenerateLevel6.started -= instance.OnGenerateLevel6;
+            @GenerateLevel6.performed -= instance.OnGenerateLevel6;
+            @GenerateLevel6.canceled -= instance.OnGenerateLevel6;
+            @GenerateLevel7.started -= instance.OnGenerateLevel7;
+            @GenerateLevel7.performed -= instance.OnGenerateLevel7;
+            @GenerateLevel7.canceled -= instance.OnGenerateLevel7;
+            @GenerateLevel8.started -= instance.OnGenerateLevel8;
+            @GenerateLevel8.performed -= instance.OnGenerateLevel8;
+            @GenerateLevel8.canceled -= instance.OnGenerateLevel8;
+            @GenerateLevel9.started -= instance.OnGenerateLevel9;
+            @GenerateLevel9.performed -= instance.OnGenerateLevel9;
+            @GenerateLevel9.canceled -= instance.OnGenerateLevel9;
         }
 
         /// <summary>
@@ -1995,6 +2425,76 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnStepPucks(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "GenerateLevel0" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnGenerateLevel0(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "GenerateLevel1" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnGenerateLevel1(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "GenerateLevel2" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnGenerateLevel2(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "GenerateLevel3" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnGenerateLevel3(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "GenerateLevel4" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnGenerateLevel4(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "GenerateLevel5" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnGenerateLevel5(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "GenerateLevel6" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnGenerateLevel6(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "GenerateLevel7" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnGenerateLevel7(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "GenerateLevel8" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnGenerateLevel8(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "GenerateLevel9" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnGenerateLevel9(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "Player" which allows adding and removing callbacks.

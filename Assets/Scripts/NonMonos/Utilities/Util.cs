@@ -380,6 +380,12 @@ namespace Slenderpi.Utilities {
 			return math.lengthsq(pos0 - pos1) > pow2(minDist);
 		}
 
+		/// <summary>
+		/// Use UnityEngine.Random to randomly determine a bool.
+		/// </summary>
+		/// <returns></returns>
+		public static bool UnityRandomBool() => UnityEngine.Random.value > 0.5f;
+
 
 
 		///////////////////////////////////////////////////// DEBUGGING

@@ -45,7 +45,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LevelManager
   _puckPrefab: {fileID: 3050537813321254843, guid: 6365be0f239768544ad47833f25d7029, type: 3}
-  WidthCount: 20
-  HeightCount: 16
+  WidthCount: 10
+  HeightCount: 8
   PuckSize: 1
   StepUpdateDelay: 0.1
