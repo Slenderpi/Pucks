@@ -147,6 +147,8 @@ public class LevelManager : MonoBehaviour {
 			: null;
 	}
 
+	public static PuckMover GetPuckMoverFromPuck(PuckNode puckNode) => Singleton._activePuckMovers[puckNode];
+
 	public void GenerateLevel(int difficulty) {
 		Assert.IsTrue(difficulty >= 0, $"[LevelManager]: GeneratedLevel() was given an invalid difficulty value of {difficulty}.");
 
@@ -293,13 +295,6 @@ public class LevelManager : MonoBehaviour {
 		foreach (var (pos, _) in chosenPositions)
 			_currentLevel.Add(pos);
 
-		//_currentLevel.Clear();
-		//for (int r = 0; r < HeightCount; r++)
-		//	for (int c = 0; c < WidthCount; c++)
-		//		_currentLevel.Add(new(r, c));
-		//_solutionPosition = new(0, 0);
-		//_solutionDirection = EPuckMovementDirection.Right;
-
 		ResetLevel();
 	}
 
@@ -394,6 +389,19 @@ public class LevelManager : MonoBehaviour {
 		_exitedPucks.Clear();
 		_activePuckMovers.Clear();
 		_puckPoolHeader = 0;
+	}
+
+	/// <summary>
+	/// Fills the grid full with Pucks. Assumes the Puck pool is big enough.
+	/// </summary>
+	public void GenerateFilledLevel() {
+		_currentLevel.Clear();
+		for (int r = 0; r < HeightCount; r++)
+			for (int c = 0; c < WidthCount; c++)
+				_currentLevel.Add(new(r, c));
+		_solutionPosition = new(0, 0);
+		_solutionDirection = EPuckMovementDirection.Right;
+		ResetLevel();
 	}
 
 	StringBuilder GetChosenPositionsAsGridStringBuilder(Dictionary<Vector2Int, EPuckMovementDirection> chosenPositions) {
@@ -595,6 +603,7 @@ public class LevelManager : MonoBehaviour {
 		var da = GameManager.DebugActions;
 		da.ResetLevel.started += OnResetLevelActionStarted;
 		da.StepPucks.started += OnStepPucksActionStarted;
+		da.GenerateFilledLevel.started += _ => GenerateFilledLevel();
 		da.GenerateLevel0.started += _ => GenerateLevel(0);
 		da.GenerateLevel1.started += _ => GenerateLevel(1);
 		da.GenerateLevel2.started += _ => GenerateLevel(2);

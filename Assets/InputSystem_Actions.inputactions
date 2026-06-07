@@ -25,6 +25,15 @@
                     "initialStateCheck": false
                 },
                 {
+                    "name": "GenerateFilledLevel",
+                    "type": "Button",
+                    "id": "ca3850ac-0912-4511-b307-ce5b7aaedcba",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
                     "name": "GenerateLevel0",
                     "type": "Button",
                     "id": "40ef68f8-0a66-4827-a786-840dc6a64cbc",
@@ -355,6 +364,17 @@
                     "processors": "",
                     "groups": "",
                     "action": "GenerateLevel9",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "1c3c59aa-cef2-4410-a0d9-b97c6820dfc7",
+                    "path": "<Keyboard>/backquote",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "GenerateFilledLevel",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

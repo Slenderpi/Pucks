@@ -111,6 +111,15 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""initialStateCheck"": false
                 },
                 {
+                    ""name"": ""GenerateFilledLevel"",
+                    ""type"": ""Button"",
+                    ""id"": ""ca3850ac-0912-4511-b307-ce5b7aaedcba"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
                     ""name"": ""GenerateLevel0"",
                     ""type"": ""Button"",
                     ""id"": ""40ef68f8-0a66-4827-a786-840dc6a64cbc"",
@@ -441,6 +450,17 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""GenerateLevel9"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""1c3c59aa-cef2-4410-a0d9-b97c6820dfc7"",
+                    ""path"": ""<Keyboard>/backquote"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""GenerateFilledLevel"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -1532,6 +1552,7 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         m_Debug = asset.FindActionMap("Debug", throwIfNotFound: true);
         m_Debug_ResetLevel = m_Debug.FindAction("ResetLevel", throwIfNotFound: true);
         m_Debug_StepPucks = m_Debug.FindAction("StepPucks", throwIfNotFound: true);
+        m_Debug_GenerateFilledLevel = m_Debug.FindAction("GenerateFilledLevel", throwIfNotFound: true);
         m_Debug_GenerateLevel0 = m_Debug.FindAction("GenerateLevel0", throwIfNotFound: true);
         m_Debug_GenerateLevel1 = m_Debug.FindAction("GenerateLevel1", throwIfNotFound: true);
         m_Debug_GenerateLevel2 = m_Debug.FindAction("GenerateLevel2", throwIfNotFound: true);
@@ -1653,6 +1674,7 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
     private List<IDebugActions> m_DebugActionsCallbackInterfaces = new List<IDebugActions>();
     private readonly InputAction m_Debug_ResetLevel;
     private readonly InputAction m_Debug_StepPucks;
+    private readonly InputAction m_Debug_GenerateFilledLevel;
     private readonly InputAction m_Debug_GenerateLevel0;
     private readonly InputAction m_Debug_GenerateLevel1;
     private readonly InputAction m_Debug_GenerateLevel2;
@@ -1682,6 +1704,10 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Debug/StepPucks".
         /// </summary>
         public InputAction @StepPucks => m_Wrapper.m_Debug_StepPucks;
+        /// <summary>
+        /// Provides access to the underlying input action "Debug/GenerateFilledLevel".
+        /// </summary>
+        public InputAction @GenerateFilledLevel => m_Wrapper.m_Debug_GenerateFilledLevel;
         /// <summary>
         /// Provides access to the underlying input action "Debug/GenerateLevel0".
         /// </summary>
@@ -1754,6 +1780,9 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @StepPucks.started += instance.OnStepPucks;
             @StepPucks.performed += instance.OnStepPucks;
             @StepPucks.canceled += instance.OnStepPucks;
+            @GenerateFilledLevel.started += instance.OnGenerateFilledLevel;
+            @GenerateFilledLevel.performed += instance.OnGenerateFilledLevel;
+            @GenerateFilledLevel.canceled += instance.OnGenerateFilledLevel;
             @GenerateLevel0.started += instance.OnGenerateLevel0;
             @GenerateLevel0.performed += instance.OnGenerateLevel0;
             @GenerateLevel0.canceled += instance.OnGenerateLevel0;
@@ -1801,6 +1830,9 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @StepPucks.started -= instance.OnStepPucks;
             @StepPucks.performed -= instance.OnStepPucks;
             @StepPucks.canceled -= instance.OnStepPucks;
+            @GenerateFilledLevel.started -= instance.OnGenerateFilledLevel;
+            @GenerateFilledLevel.performed -= instance.OnGenerateFilledLevel;
+            @GenerateFilledLevel.canceled -= instance.OnGenerateFilledLevel;
             @GenerateLevel0.started -= instance.OnGenerateLevel0;
             @GenerateLevel0.performed -= instance.OnGenerateLevel0;
             @GenerateLevel0.canceled -= instance.OnGenerateLevel0;
@@ -2425,6 +2457,13 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnStepPucks(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "GenerateFilledLevel" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnGenerateFilledLevel(InputAction.CallbackContext context);
         /// <summary>
         /// Method invoked when associated input action "GenerateLevel0" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
