@@ -14,11 +14,19 @@ using UnityEngine.InputSystem;
 public class LevelManager : MonoBehaviour {
 
 	/// <summary>
-	/// The value should be set to something that is <= WidthCount * HeightCount
+	/// Broadcasted after every StepLevel() call.<br/>
+	/// int: numCollisions, the number of moving->stationary collisions this step
 	/// </summary>
-	const int PUCK_MOVER_POOL_SIZE = 10 * 8;
+	public static Action<int> A_OnLevelStepped;
+
+	[Tooltip("The value should be set to something that is <= WidthCount * HeightCount.")]
+	[SerializeField]
+	int PUCK_MOVER_POOL_SIZE = 20 * 16;
 
 	public static LevelManager Singleton;
+
+	[SerializeField]
+	bool _updateManually = false;
 
 	[SerializeField]
 	PuckMover _puckPrefab;
@@ -110,14 +118,20 @@ public class LevelManager : MonoBehaviour {
 		D_DrawLevelGridOutline();
 		if (!_hasLevelStarted)
 			return;
-		while (_timeSinceLastStep >= StepUpdateDelay) {
-			_timeSinceLastStep -= StepUpdateDelay;
-			StepLevel();
+		if (!_updateManually) {
+			while (_timeSinceLastStep >= StepUpdateDelay) {
+				_timeSinceLastStep -= StepUpdateDelay;
+				StepLevel();
+			}
+			foreach (var (pn, pm) in _activePuckMovers) {
+				pm.transform.position = GetLerpedPosition(pn);
+			}
+			_timeSinceLastStep += Time.deltaTime;
+		} else {
+			foreach (var (pn, pm) in _activePuckMovers) {
+				pm.transform.position = PointToPosition(pn.GridPoint);
+			}
 		}
-		foreach (var (pn, pm) in _activePuckMovers) {
-			pm.transform.position = GetLerpedPosition(pn);
-		}
-		_timeSinceLastStep += Time.deltaTime;
 	}
 
 	private void OnDestroy() {
@@ -276,64 +290,15 @@ public class LevelManager : MonoBehaviour {
 			Debug.Log(str.ToString());
 		}
 
-
-
-
 		foreach (var (pos, _) in chosenPositions)
 			_currentLevel.Add(pos);
 
-
-
-
-
-		// temporary hardcoded level for testing)
-
+		//_currentLevel.Clear();
 		//for (int r = 0; r < HeightCount; r++)
 		//	for (int c = 0; c < WidthCount; c++)
 		//		_currentLevel.Add(new(r, c));
-		//_solutionPosition = new(0, );
+		//_solutionPosition = new(0, 0);
 		//_solutionDirection = EPuckMovementDirection.Right;
-
-		//_currentLevel.Add(new(8, 2));
-		//_currentLevel.Add(new(0, 10));
-		//_currentLevel.Add(new(8, 10));
-		//_currentLevel.Add(new(10, 10));
-		//_currentLevel.Add(new(0, 5));
-		//_currentLevel.Add(new(5, 5));
-		//_currentLevel.Add(new(5, 0));
-		//_currentLevel.Add(new(5, 7));
-		//_solutionPosition = new(8, 2);
-		//_solutionDirection = EPuckMovementDirection.Right;
-
-		//_currentLevel.Add(new(0, 5));
-		//_currentLevel.Add(new(1, 5));
-		//_currentLevel.Add(new(1, 4));
-		//_currentLevel.Add(new(2, 4));
-		//_currentLevel.Add(new(2, 5));
-		//_currentLevel.Add(new(3, 5));
-		//_currentLevel.Add(new(3, 1));
-		//_solutionPosition = new(0, 5);
-		//_solutionDirection = EPuckMovementDirection.Down;
-
-		//_currentLevel.Add(new(0, 0));
-		//_currentLevel.Add(new(0, 1));
-		//_currentLevel.Add(new(0, 3));
-		//_currentLevel.Add(new(0, 4));
-		//_currentLevel.Add(new(1, 0));
-		//_currentLevel.Add(new(1, 1));
-		//_currentLevel.Add(new(1, 3));
-		//_currentLevel.Add(new(2, 1));
-		//_currentLevel.Add(new(3, 1));
-		//_currentLevel.Add(new(3, 3));
-		//_currentLevel.Add(new(3, 5));
-		//_currentLevel.Add(new(4, 1));
-		//_solutionPosition = new(0, 1);
-		//_solutionDirection = EPuckMovementDirection.Down;
-
-		//_currentLevel.Add(new(0, 0));
-		//_currentLevel.Add(new(0, WidthCount - 1));
-		//_currentLevel.Add(new(HeightCount - 1, WidthCount - 1));
-		//_currentLevel.Add(new(HeightCount - 1, 0));
 
 		ResetLevel();
 	}
@@ -343,10 +308,12 @@ public class LevelManager : MonoBehaviour {
 			p.Move();
 		}
 		int numMovingPucks = _movingPucks.Count;
+		int numCollisions = 0;
 		for (int i = 0; i < numMovingPucks; i++) {
 			PuckNode p = _movingPucks[i];
 			p.Move();
 			if (_stationaryPucks.ContainsKey(p.GridPoint)) {
+				numCollisions++;
 				if (p.GetSplitDirection() == EPuckMovementDirection.SplitHorizontal) {
 					p.MovementDirection = EPuckMovementDirection.Left;
 					MoveStationaryPuck(p.GridPoint, EPuckMovementDirection.Right);
@@ -371,6 +338,7 @@ public class LevelManager : MonoBehaviour {
 		//	str.Append(GetLevelString());
 		//	Debug.Log(str.ToString());
 		//}
+		A_OnLevelStepped?.Invoke(numCollisions);
 	}
 
 	public void ResetLevel() {
@@ -645,7 +613,13 @@ public class LevelManager : MonoBehaviour {
 	/// Doesn't actually spawn a PuckMover. Rather, it takes from the _puckMoverPool and increments the _puckPoolHeader pointer.
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	PuckMover SpawnPuckMover() => _puckMoverPool[_puckPoolHeader++];
+	PuckMover SpawnPuckMover() {
+		Assert.IsTrue(
+			_puckPoolHeader < PUCK_MOVER_POOL_SIZE,
+			$"[LevelManager]: Attempted to spawn another PuckMover but the pool has been used up! Pool size: {PUCK_MOVER_POOL_SIZE}."
+		);
+		return _puckMoverPool[_puckPoolHeader++];
+	}
 
 	void CreatePuckMoverPool() {
 		for (int i = 0; i < PUCK_MOVER_POOL_SIZE; i++) {
