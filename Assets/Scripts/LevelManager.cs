@@ -18,6 +18,11 @@ public class LevelManager : MonoBehaviour {
 	/// int: numCollisions, the number of moving->stationary collisions this step
 	/// </summary>
 	public static Action<int> A_OnLevelStepped;
+	/// <summary>
+	/// Broadcasted after GenerateLevel() has finished.<br/>
+	/// int: difficulty
+	/// </summary>
+	public static Action<int> A_OnLevelSpawned;
 
 	[Tooltip("The value should be set to something that is <= WidthCount * HeightCount.")]
 	[SerializeField]
@@ -296,6 +301,7 @@ public class LevelManager : MonoBehaviour {
 			_currentLevel.Add(pos);
 
 		ResetLevel();
+		A_OnLevelSpawned?.Invoke(difficulty);
 	}
 
 	public void StepLevel() {
@@ -402,6 +408,7 @@ public class LevelManager : MonoBehaviour {
 		_solutionPosition = new(0, 0);
 		_solutionDirection = EPuckMovementDirection.Right;
 		ResetLevel();
+		A_OnLevelSpawned?.Invoke(-1);
 	}
 
 	StringBuilder GetChosenPositionsAsGridStringBuilder(Dictionary<Vector2Int, EPuckMovementDirection> chosenPositions) {

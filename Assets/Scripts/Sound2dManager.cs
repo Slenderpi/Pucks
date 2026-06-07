@@ -9,14 +9,12 @@ public class Sound2dManager : MonoBehaviour {
 
 
 	private void Awake() {
+		LevelManager.A_OnLevelStepped += OnLevelStepped;
+
 		RuntimeManager.LoadBank("Master");
 		RuntimeManager.LoadBank("SoundEffects");
 		RuntimeManager.StudioSystem.getBank("bank:/SoundEffects", out FMOD.Studio.Bank bank);
 		bank.loadSampleData();
-	}
-
-	private void Start() {
-		LevelManager.A_OnLevelStepped += OnLevelStepped;
 	}
 
 	private void OnDestroy() {
