@@ -346,16 +346,26 @@ public class LevelManager : MonoBehaviour {
 		_stepCount = 0;
 		_timeSinceLastStep = 0f;
 		ClearLevel();
+
+		// Track manhattan distances for each Puck
+		List<int> puckManDists = new();
 		// Create stationary PuckNodes
 		foreach (var pos in _currentLevel) {
 			PuckNode puck = new(pos.x, pos.y);
+			int manDist = pos.x + pos.y;
+			int index = puckManDists.BinarySearch(manDist);
+			if (index < 0) {
+				index = ~index; // insertion point
+				puckManDists.Insert(index, manDist);
+			}
 			_stationaryPucks.Add(pos, puck);
 		}
 		// Bind PuckMovers
-		foreach (var (_, pn) in _stationaryPucks) {
+		foreach (var (pos, pn) in _stationaryPucks) {
 			PuckMover pm = SpawnPuckMover();
 			pm.transform.position = PointToPosition(pn.GridPoint);
 			pm.gameObject.SetActive(true);
+			pm.OnSpawned(puckManDists.BinarySearch(pos.x + pos.y));
 			_activePuckMovers.Add(pn, pm);
 		}
 

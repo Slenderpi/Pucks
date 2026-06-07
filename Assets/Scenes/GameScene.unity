@@ -373,7 +373,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6566920083635990324, guid: 783048227b7c2b34fa13c6bd356f348c, type: 3}
       propertyPath: _updateManually
-      value: 1
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6566920083635990324, guid: 783048227b7c2b34fa13c6bd356f348c, type: 3}
+      propertyPath: PUCK_MOVER_POOL_SIZE
+      value: 1280
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
