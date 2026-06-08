@@ -155,6 +155,23 @@ public class LevelManager : MonoBehaviour {
 	public static PuckMover GetPuckMoverFromPuck(PuckNode puckNode) => Singleton._activePuckMovers[puckNode];
 
 	public void GenerateLevel(int difficulty) {
+		int numFails = 0;
+		do {
+			numFails++;
+			GenerateLevel_Implementation(difficulty);
+			ResetLevel();
+			MoveStationaryPuck(_solutionPosition, _solutionDirection);
+			while (_movingPucks.Count > 0) // Brute force solution validation by stepping it until completion
+				StepLevel_Implementation();
+		} while (_stationaryPucks.Count > 0);
+		if (numFails > 1) {
+			Debug.LogWarning($"[LevelManager]: Level generation failed {numFails} times for difficulty {difficulty}.");
+		}
+		ResetLevel();
+		A_OnLevelSpawned?.Invoke(difficulty);
+	}
+
+	private void GenerateLevel_Implementation(int difficulty) {
 		Assert.IsTrue(difficulty >= 0, $"[LevelManager]: GeneratedLevel() was given an invalid difficulty value of {difficulty}.");
 
 		_currentLevel.Clear();
@@ -241,7 +258,6 @@ public class LevelManager : MonoBehaviour {
 		if (lastSplitDir == EPuckMovementDirection.SplitHorizontal) {
 			DetermineHorizontalRange(lastPoint, chosenPositions, out Vector2Int leftRange, out Vector2Int rightRange);
 			bool useLeft = Util.UnityRandomBool();
-			Debug.Log("lastSplitDir was HORIZONTAL");
 			if (useLeft) {
 				_solutionPosition = new(lastPoint.x, UnityEngine.Random.Range(leftRange.x, leftRange.y));
 				_solutionDirection = EPuckMovementDirection.Right;
@@ -264,26 +280,21 @@ public class LevelManager : MonoBehaviour {
 		} else {
 			DetermineVerticalRange(lastPoint, chosenPositions, out Vector2Int upRange, out Vector2Int downRange);
 			bool useUp = Util.UnityRandomBool();
-			Debug.Log("lastSplitDir was VERTICAL");
 			if (useUp) {
 				_solutionPosition = new(UnityEngine.Random.Range(upRange.x, upRange.y), lastPoint.y);
 				_solutionDirection = EPuckMovementDirection.Down;
-				Debug.Log("1: useUp");
 			} else {
 				_solutionPosition = new(UnityEngine.Random.Range(downRange.x, downRange.y), lastPoint.y);
 				_solutionDirection = EPuckMovementDirection.Up;
-				Debug.Log("1: useDown");
 			}
 			if (chosenPositions.ContainsKey(_solutionPosition)) {
 				// Try other side
 				if (!useUp) {
 					_solutionPosition = new(UnityEngine.Random.Range(upRange.x, upRange.y), lastPoint.y);
 					_solutionDirection = EPuckMovementDirection.Down;
-					Debug.Log("2: useUp");
 				} else {
 					_solutionPosition = new(UnityEngine.Random.Range(downRange.x, downRange.y), lastPoint.y);
 					_solutionDirection = EPuckMovementDirection.Up;
-					Debug.Log("2: useDown");
 				}
 				if (chosenPositions.ContainsKey(_solutionPosition))
 					Debug.LogWarning("[LevelManager]: The final Puck does not have space to be given an answer Puck.");
@@ -299,12 +310,19 @@ public class LevelManager : MonoBehaviour {
 
 		foreach (var (pos, _) in chosenPositions)
 			_currentLevel.Add(pos);
-
-		ResetLevel();
-		A_OnLevelSpawned?.Invoke(difficulty);
 	}
 
 	public void StepLevel() {
+		int numCollisions = StepLevel_Implementation();
+		//{
+		//	StringBuilder str = new("[LevelManager]: STEP |");
+		//	str.Append(GetLevelString());
+		//	Debug.Log(str.ToString());
+		//}
+		A_OnLevelStepped?.Invoke(numCollisions);
+	}
+
+	int StepLevel_Implementation() {
 		foreach (PuckNode p in _exitedPucks) {
 			p.Move();
 		}
@@ -333,13 +351,7 @@ public class LevelManager : MonoBehaviour {
 		}
 
 		_stepCount++;
-
-		//{
-		//	StringBuilder str = new("[LevelManager]: STEP |");
-		//	str.Append(GetLevelString());
-		//	Debug.Log(str.ToString());
-		//}
-		A_OnLevelStepped?.Invoke(numCollisions);
+		return numCollisions;
 	}
 
 	public void ResetLevel() {
