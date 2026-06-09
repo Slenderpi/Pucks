@@ -31,9 +31,6 @@ public class LevelManager : MonoBehaviour {
 	public static LevelManager Singleton;
 
 	[SerializeField]
-	bool _updateManually = false;
-
-	[SerializeField]
 	PuckMover _puckPrefab;
 
 	/// <summary>
@@ -58,6 +55,12 @@ public class LevelManager : MonoBehaviour {
 	public float StepUpdateDelay = 0.1f;
 
 	public int StepCount => _stepCount;
+
+	[Header("Debug")]
+	[SerializeField]
+	bool _updateManually = false;
+	[SerializeField]
+	int _startingDifficulty = 0;
 
 	/// <summary>
 	/// Consists of where the current level's Pucks start at.
@@ -116,7 +119,7 @@ public class LevelManager : MonoBehaviour {
 	private void Start() {
 		BindDebugActions();
 		GameManager.DebugActions.Enable();
-			GenerateLevel(0);
+			GenerateLevel(_startingDifficulty);
 	}
 
 	private void Update() {
@@ -155,16 +158,21 @@ public class LevelManager : MonoBehaviour {
 	public static PuckMover GetPuckMoverFromPuck(PuckNode puckNode) => Singleton._activePuckMovers[puckNode];
 
 	public void GenerateLevel(int difficulty) {
+		Assert.IsTrue(difficulty >= 0, $"[LevelManager]: GeneratedLevel() was given an invalid difficulty value of {difficulty}.");
 		int numFails = 0;
 		do {
-			numFails++;
 			GenerateLevel_Implementation(difficulty);
 			ResetLevel();
 			MoveStationaryPuck(_solutionPosition, _solutionDirection);
 			while (_movingPucks.Count > 0) // Brute force solution validation by stepping it until completion
 				StepLevel_Implementation();
-		} while (_stationaryPucks.Count > 0);
-		if (numFails > 1) {
+			if (_stationaryPucks.Count == 0)
+				break;
+			else
+				numFails++;
+			break;
+		} while (true);
+		if (numFails > 0) {
 			Debug.LogWarning($"[LevelManager]: Level generation failed {numFails} times for difficulty {difficulty}.");
 		}
 		ResetLevel();
@@ -172,8 +180,6 @@ public class LevelManager : MonoBehaviour {
 	}
 
 	private void GenerateLevel_Implementation(int difficulty) {
-		Assert.IsTrue(difficulty >= 0, $"[LevelManager]: GeneratedLevel() was given an invalid difficulty value of {difficulty}.");
-
 		_currentLevel.Clear();
 		_difficulty = difficulty;
 
