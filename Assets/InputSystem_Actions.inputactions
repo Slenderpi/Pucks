@@ -122,6 +122,33 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "GenerateHarderLevel",
+                    "type": "Button",
+                    "id": "42ac173b-0a63-43b0-a115-a752c4c6789a",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "GenerateEasierLevel",
+                    "type": "Button",
+                    "id": "685ab97d-30a0-4f35-b95f-6e2cab8e274f",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "RegenerateCurrent",
+                    "type": "Button",
+                    "id": "ffa7bcda-de96-4c3b-a02d-7c0d5f475660",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -375,6 +402,39 @@
                     "processors": "",
                     "groups": "",
                     "action": "GenerateFilledLevel",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "d7bd9cd5-f02c-4f40-b5c0-d16860a89f9f",
+                    "path": "<Keyboard>/equals",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "GenerateHarderLevel",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "a839faf5-871f-4058-a31c-d5bd6f7619cb",
+                    "path": "<Keyboard>/minus",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "GenerateEasierLevel",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "d1fc9530-280f-4634-8bcf-9c6135c25b8d",
+                    "path": "<Keyboard>/g",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "RegenerateCurrent",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

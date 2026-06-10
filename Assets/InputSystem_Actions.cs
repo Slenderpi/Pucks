@@ -208,6 +208,33 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""GenerateHarderLevel"",
+                    ""type"": ""Button"",
+                    ""id"": ""42ac173b-0a63-43b0-a115-a752c4c6789a"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""GenerateEasierLevel"",
+                    ""type"": ""Button"",
+                    ""id"": ""685ab97d-30a0-4f35-b95f-6e2cab8e274f"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""RegenerateCurrent"",
+                    ""type"": ""Button"",
+                    ""id"": ""ffa7bcda-de96-4c3b-a02d-7c0d5f475660"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -461,6 +488,39 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""GenerateFilledLevel"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""d7bd9cd5-f02c-4f40-b5c0-d16860a89f9f"",
+                    ""path"": ""<Keyboard>/equals"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""GenerateHarderLevel"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""a839faf5-871f-4058-a31c-d5bd6f7619cb"",
+                    ""path"": ""<Keyboard>/minus"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""GenerateEasierLevel"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""d1fc9530-280f-4634-8bcf-9c6135c25b8d"",
+                    ""path"": ""<Keyboard>/g"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""RegenerateCurrent"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -1563,6 +1623,9 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         m_Debug_GenerateLevel7 = m_Debug.FindAction("GenerateLevel7", throwIfNotFound: true);
         m_Debug_GenerateLevel8 = m_Debug.FindAction("GenerateLevel8", throwIfNotFound: true);
         m_Debug_GenerateLevel9 = m_Debug.FindAction("GenerateLevel9", throwIfNotFound: true);
+        m_Debug_GenerateHarderLevel = m_Debug.FindAction("GenerateHarderLevel", throwIfNotFound: true);
+        m_Debug_GenerateEasierLevel = m_Debug.FindAction("GenerateEasierLevel", throwIfNotFound: true);
+        m_Debug_RegenerateCurrent = m_Debug.FindAction("RegenerateCurrent", throwIfNotFound: true);
         // Player
         m_Player = asset.FindActionMap("Player", throwIfNotFound: true);
         m_Player_SelectSlider = m_Player.FindAction("SelectSlider", throwIfNotFound: true);
@@ -1685,6 +1748,9 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
     private readonly InputAction m_Debug_GenerateLevel7;
     private readonly InputAction m_Debug_GenerateLevel8;
     private readonly InputAction m_Debug_GenerateLevel9;
+    private readonly InputAction m_Debug_GenerateHarderLevel;
+    private readonly InputAction m_Debug_GenerateEasierLevel;
+    private readonly InputAction m_Debug_RegenerateCurrent;
     /// <summary>
     /// Provides access to input actions defined in input action map "Debug".
     /// </summary>
@@ -1748,6 +1814,18 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Debug/GenerateLevel9".
         /// </summary>
         public InputAction @GenerateLevel9 => m_Wrapper.m_Debug_GenerateLevel9;
+        /// <summary>
+        /// Provides access to the underlying input action "Debug/GenerateHarderLevel".
+        /// </summary>
+        public InputAction @GenerateHarderLevel => m_Wrapper.m_Debug_GenerateHarderLevel;
+        /// <summary>
+        /// Provides access to the underlying input action "Debug/GenerateEasierLevel".
+        /// </summary>
+        public InputAction @GenerateEasierLevel => m_Wrapper.m_Debug_GenerateEasierLevel;
+        /// <summary>
+        /// Provides access to the underlying input action "Debug/RegenerateCurrent".
+        /// </summary>
+        public InputAction @RegenerateCurrent => m_Wrapper.m_Debug_RegenerateCurrent;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -1813,6 +1891,15 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @GenerateLevel9.started += instance.OnGenerateLevel9;
             @GenerateLevel9.performed += instance.OnGenerateLevel9;
             @GenerateLevel9.canceled += instance.OnGenerateLevel9;
+            @GenerateHarderLevel.started += instance.OnGenerateHarderLevel;
+            @GenerateHarderLevel.performed += instance.OnGenerateHarderLevel;
+            @GenerateHarderLevel.canceled += instance.OnGenerateHarderLevel;
+            @GenerateEasierLevel.started += instance.OnGenerateEasierLevel;
+            @GenerateEasierLevel.performed += instance.OnGenerateEasierLevel;
+            @GenerateEasierLevel.canceled += instance.OnGenerateEasierLevel;
+            @RegenerateCurrent.started += instance.OnRegenerateCurrent;
+            @RegenerateCurrent.performed += instance.OnRegenerateCurrent;
+            @RegenerateCurrent.canceled += instance.OnRegenerateCurrent;
         }
 
         /// <summary>
@@ -1863,6 +1950,15 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @GenerateLevel9.started -= instance.OnGenerateLevel9;
             @GenerateLevel9.performed -= instance.OnGenerateLevel9;
             @GenerateLevel9.canceled -= instance.OnGenerateLevel9;
+            @GenerateHarderLevel.started -= instance.OnGenerateHarderLevel;
+            @GenerateHarderLevel.performed -= instance.OnGenerateHarderLevel;
+            @GenerateHarderLevel.canceled -= instance.OnGenerateHarderLevel;
+            @GenerateEasierLevel.started -= instance.OnGenerateEasierLevel;
+            @GenerateEasierLevel.performed -= instance.OnGenerateEasierLevel;
+            @GenerateEasierLevel.canceled -= instance.OnGenerateEasierLevel;
+            @RegenerateCurrent.started -= instance.OnRegenerateCurrent;
+            @RegenerateCurrent.performed -= instance.OnRegenerateCurrent;
+            @RegenerateCurrent.canceled -= instance.OnRegenerateCurrent;
         }
 
         /// <summary>
@@ -2534,6 +2630,27 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnGenerateLevel9(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "GenerateHarderLevel" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnGenerateHarderLevel(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "GenerateEasierLevel" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnGenerateEasierLevel(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "RegenerateCurrent" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnRegenerateCurrent(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "Player" which allows adding and removing callbacks.

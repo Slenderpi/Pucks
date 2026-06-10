@@ -759,6 +759,9 @@ public class LevelManager : MonoBehaviour {
 		da.GenerateLevel7.started += _ => GenerateLevel(7);
 		da.GenerateLevel8.started += _ => GenerateLevel(8);
 		da.GenerateLevel9.started += _ => GenerateLevel(9);
+		da.GenerateEasierLevel.started += _ => GenerateLevel(Math.Max(0, _difficulty - 1));
+		da.GenerateHarderLevel.started += _ => GenerateLevel(_difficulty + 1);
+		da.RegenerateCurrent.started += _ => GenerateLevel(_difficulty);
 	}
 
 	private void OnResetLevelActionStarted(InputAction.CallbackContext context) {
