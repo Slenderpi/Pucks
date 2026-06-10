@@ -384,7 +384,7 @@ namespace Slenderpi.Utilities {
 		/// Use UnityEngine.Random to randomly determine a bool.
 		/// </summary>
 		/// <returns></returns>
-		public static bool UnityRandomBool() => UnityEngine.Random.value > 0.5f;
+		public static bool UnityRandomBool() => UnityEngine.Random.value >= 0.5f;
 
 
 

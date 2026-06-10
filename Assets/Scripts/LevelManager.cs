@@ -159,6 +159,7 @@ public class LevelManager : MonoBehaviour {
 
 	public void GenerateLevel(int difficulty) {
 		Assert.IsTrue(difficulty >= 0, $"[LevelManager]: GeneratedLevel() was given an invalid difficulty value of {difficulty}.");
+		int MAX_TRIES = 50;
 		int numFails = 0;
 		do {
 			GenerateLevel_Implementation(difficulty);
@@ -168,15 +169,95 @@ public class LevelManager : MonoBehaviour {
 				StepLevel_Implementation();
 			if (_stationaryPucks.Count == 0)
 				break;
-			else
-				numFails++;
-			break;
-		} while (true);
-		if (numFails > 0) {
-			Debug.LogWarning($"[LevelManager]: Level generation failed {numFails} times for difficulty {difficulty}.");
+			numFails++;
+		} while (numFails < MAX_TRIES);
+		if (numFails > 1) {
+			Debug.LogWarning($"[LevelManager]: Level generation failed {numFails} (max {MAX_TRIES}) times for difficulty {difficulty}.");
 		}
 		ResetLevel();
 		A_OnLevelSpawned?.Invoke(difficulty);
+	}
+
+	/// <summary>
+	/// Fills availableSpots with 
+	/// </summary>
+	/// <param name="lastPoint"></param>
+	/// <param name="chosenPositions"></param>
+	/// <param name="availableSpots"></param>
+	/// <returns></returns>
+	int DetermineHorizontalRangeNEW(Vector2Int lastPoint, Dictionary<Vector2Int, EPuckMovementDirection> chosenPositions, List<int> availableSpots) {
+		int currCol = lastPoint.y - 1;
+		int lpindex = 0;
+		// Walk left to determine smallest left
+		while (currCol >= 0) {
+			// Add the spot if there's nothing there or the movementdir there is Claimed
+			Vector2Int currPos = new(lastPoint.x, currCol);
+			if (!chosenPositions.ContainsKey(currPos)) {
+				availableSpots.Add(currCol);
+				lpindex++;
+			} else {
+				if (chosenPositions[currPos] != EPuckMovementDirection.Claimed)
+					break;
+			}
+			currCol--;
+		}
+
+		// Now walk right
+		currCol = lastPoint.y + 1;
+		while (currCol < WidthCount) {
+			// Add the spot if there's nothing there, end if there is something and it's not just a Claimed
+			Vector2Int currPos = new(lastPoint.x, currCol);
+			if (!chosenPositions.ContainsKey(currPos)) {
+				availableSpots.Add(currCol);
+			} else {
+				if (chosenPositions[currPos] != EPuckMovementDirection.Claimed)
+					break;
+			}
+			currCol++;
+		}
+
+		return lpindex;
+	}
+
+	/// <summary>
+	/// Fills availableSpots with 
+	/// </summary>
+	/// <param name="lastPoint"></param>
+	/// <param name="chosenPositions"></param>
+	/// <param name="availableSpots"></param>
+	/// <returns></returns>
+	int DetermineVerticalRangeNEW(Vector2Int lastPoint, Dictionary<Vector2Int, EPuckMovementDirection> chosenPositions, List<int> availableSpots) {
+		int currRow = lastPoint.x - 1;
+		int lpindex = 0;
+		// Walk up to determine smallest up
+		while (currRow >= 0) {
+			// Add the spot if there's nothing there or the movementdir there is Claimed
+			Vector2Int currPos = new(currRow, lastPoint.y);
+			if (!chosenPositions.ContainsKey(currPos)) {
+				availableSpots.Add(currRow);
+				lpindex++;
+			} else {
+				if (chosenPositions[currPos] != EPuckMovementDirection.Claimed)
+					break;
+			}
+			currRow--;
+		}
+
+		// Now walk down
+		currRow = lastPoint.x + 1;
+		while (currRow < HeightCount) {
+			// Add the spot if there's nothing there, end if there is something and it's not just a Claimed
+			Vector2Int currPos = new(currRow, lastPoint.y);
+			if (!chosenPositions.ContainsKey(currPos)) {
+				availableSpots.Add(currRow);
+			} else {
+				if (chosenPositions[currPos] != EPuckMovementDirection.Claimed)
+					break;
+			}
+			currRow++;
+		}
+
+		return lpindex;
 	}
 
 	private void GenerateLevel_Implementation(int difficulty) {
@@ -186,7 +267,9 @@ public class LevelManager : MonoBehaviour {
 		Dictionary<Vector2Int, EPuckMovementDirection> chosenPositions = new();
 		Vector2Int lastPoint = new(UnityEngine.Random.Range(2, HeightCount - 3), UnityEngine.Random.Range(2, WidthCount - 3));
 		// If |, that means it desires an instigator of ^ or v, and that its children to hit are < and >. That is, we create <|> or ^-v
-		EPuckMovementDirection lastSplitDir = Util.UnityRandomBool() ? EPuckMovementDirection.SplitHorizontal : EPuckMovementDirection.SplitVertical;
+		EPuckMovementDirection lastSplitDir = EPuckMovementDirection.SplitHorizontal; // Util.UnityRandomBool() ? EPuckMovementDirection.SplitHorizontal : EPuckMovementDirection.SplitVertical;
+		// A list of spots in the current row/col that a new sibling and parent will can be placed at.
+		List<int> availableSpots = new(Math.Max(WidthCount, HeightCount));
 
 		Debug.Log($"[LevelManager]: GENERATE BEGIN | lastPoint: {lastPoint} | lastSplitDir: {PuckUtil.PuckMovementToChar(lastSplitDir)}");
 
@@ -196,52 +279,88 @@ public class LevelManager : MonoBehaviour {
 			EPuckMovementDirection siblingInputHitDir;
 			Vector2Int parent;
 			EPuckMovementDirection parentSplitDir;
-			if (lastSplitDir == EPuckMovementDirection.SplitHorizontal) {
-				// Walk left and right
-				// Choose left/right based on greater space
-				// Create sibling right/left and parent middle
-				// Set parent middle to - and lastPoint to middle
-				DetermineHorizontalRange(lastPoint, chosenPositions, out Vector2Int leftRange, out Vector2Int rightRange);
 
-				// Determine range for sibling and parent Pucks. The range is [min, max]
-				bool useLeftSide = leftRange.y - leftRange.x > rightRange.y - rightRange.x;
-				if ((useLeftSide ? leftRange.y - leftRange.x : rightRange.y - rightRange.x) < 1) {
-					Debug.LogWarning($"Can't fit iteration {i}! lastPoint: {lastPoint} | Split dir: '{PuckUtil.PuckMovementToChar(lastSplitDir)}' | Ranges: ({leftRange}), ({rightRange})");
+			availableSpots.Clear();
+			int lpindex = 0;
+			if (lastSplitDir == EPuckMovementDirection.SplitHorizontal) {
+				lpindex = DetermineHorizontalRangeNEW(lastPoint, chosenPositions, availableSpots);
+				if (lpindex <= 1 && availableSpots.Count - lpindex < 1) {
+					Debug.LogWarning($"Can't fit iteration {i}! lastPoint: {lastPoint} | lastSplitDir: '{PuckUtil.PuckMovementToChar(lastSplitDir)}' | availableSpots ({lpindex}): [{availableSpots}]");
 					break;
 				}
+
+				// If (leftUnusable) use right
+				// else if (rightUnusable) use left
+				// else use random
+				bool useLeftSide = lpindex <= 1 ? false : availableSpots.Count - lpindex < 1 ? true : Util.UnityRandomBool();
+				//bool useLeftSide = false;
 				if (useLeftSide) {
-					sibling = new(lastPoint.x, UnityEngine.Random.Range(leftRange.x, leftRange.y - 1));
+					int siblingColToUseIndex = UnityEngine.Random.Range(1, lpindex - 1);
+					int parentColToUseIndex = UnityEngine.Random.Range(0, siblingColToUseIndex - 1);
+					sibling = new(lastPoint.x, availableSpots[siblingColToUseIndex]);
 					siblingInputHitDir = EPuckMovementDirection.Left;
-					parent = new(lastPoint.x, UnityEngine.Random.Range(sibling.y + 1, lastPoint.y - 1));
+					parent = new(lastPoint.x, availableSpots[parentColToUseIndex]);
+					// Fill in between spots as Claimed
+					// ... from lastPoint to parent
+					for (int j = 0; j < parentColToUseIndex; j++)
+						chosenPositions.Add(new(lastPoint.x, availableSpots[j]), EPuckMovementDirection.Claimed);
+					// ... then from parent to sibling
+					for (int j = parentColToUseIndex + 1; j < siblingColToUseIndex; j++)
+						chosenPositions.Add(new(lastPoint.x, availableSpots[j]), EPuckMovementDirection.Claimed);
 				} else {
-					sibling = new(lastPoint.x, UnityEngine.Random.Range(rightRange.x + 1, rightRange.y));
+					int siblingColToUseIndex = UnityEngine.Random.Range(lpindex + 1, availableSpots.Count - 1);
+					int parentColToUseIndex = UnityEngine.Random.Range(lpindex, siblingColToUseIndex - 1);
+					sibling = new(lastPoint.x, availableSpots[siblingColToUseIndex]);
 					siblingInputHitDir = EPuckMovementDirection.Right;
-					parent = new(lastPoint.x, UnityEngine.Random.Range(lastPoint.y + 1, sibling.y - 1));
+					parent = new(lastPoint.x, availableSpots[parentColToUseIndex]);
+					// Fill in between spots as Claimed
+					// ... from lastPoint to parent
+					for (int j = lpindex; j < parentColToUseIndex; j++)
+						chosenPositions.Add(new(lastPoint.x, availableSpots[j]), EPuckMovementDirection.Claimed);
+					// ... then from parent to sibling
+					for (int j = parentColToUseIndex + 1; j < siblingColToUseIndex; j++)
+						chosenPositions.Add(new(lastPoint.x, availableSpots[j]), EPuckMovementDirection.Claimed);
 				}
 				parentSplitDir = EPuckMovementDirection.SplitVertical;
 				chosenPositions[lastPoint] = useLeftSide ? EPuckMovementDirection.Right : EPuckMovementDirection.Left;
 			} else {
-				// Walk up and down
-				// Choose up/down based on greater space
-				// Create sibling down/up and parent middle
-				// Set parent middle to - and lastPoint to middle
-				// In the grid, the Y axis expands downward. So going upward means y--, and downward y++
-				DetermineVerticalRange(lastPoint, chosenPositions, out Vector2Int upRange, out Vector2Int downRange);
-
-				// Determine range for sibling and parent Pucks. The range is [min, max]
-				bool useUpSide = upRange.y - upRange.x > downRange.y - downRange.x;
-				if ((useUpSide ? upRange.y - upRange.x : downRange.y - downRange.x) < 1) {
-					Debug.LogWarning($"Can't fit iteration {i}! lastPoint: {lastPoint} | Split dir: '{PuckUtil.PuckMovementToChar(lastSplitDir)}' | Ranges: ({upRange}), ({downRange})");
+				lpindex = DetermineVerticalRangeNEW(lastPoint, chosenPositions, availableSpots);
+				if (lpindex <= 1 && availableSpots.Count - lpindex < 1) {
+					Debug.LogWarning($"Can't fit iteration {i}! lastPoint: {lastPoint} | lastSplitDir: '{PuckUtil.PuckMovementToChar(lastSplitDir)}' | availableSpots ({lpindex}): [{availableSpots}]");
 					break;
 				}
+
+				// If (upUnusable) use down
+				// else if (downUnusable) use up
+				// else use random
+				bool useUpSide = lpindex <= 1 ? false : availableSpots.Count - lpindex < 1 ? true : Util.UnityRandomBool();
+				//bool useUpSide = true;
 				if (useUpSide) {
-					sibling = new(UnityEngine.Random.Range(upRange.x, upRange.y - 1), lastPoint.y);
+					int siblingRowToUseIndex = UnityEngine.Random.Range(1, lpindex - 1);
+					int parentColToUseIndex = UnityEngine.Random.Range(0, siblingRowToUseIndex - 1);
+					sibling = new(availableSpots[siblingRowToUseIndex], lastPoint.y);
 					siblingInputHitDir = EPuckMovementDirection.Up;
-					parent = new(UnityEngine.Random.Range(sibling.x + 1, lastPoint.x - 1), lastPoint.y);
+					parent = new(availableSpots[parentColToUseIndex], lastPoint.y);
+					// Fill in between spots as Claimed
+					// ... from lastPoint to parent
+					for (int j = 0; j < parentColToUseIndex; j++)
+						chosenPositions.Add(new(availableSpots[j], lastPoint.y), EPuckMovementDirection.Claimed);
+					// ... then from parent to sibling
+					for (int j = parentColToUseIndex + 1; j < siblingRowToUseIndex; j++)
+						chosenPositions.Add(new(availableSpots[j], lastPoint.y), EPuckMovementDirection.Claimed);
 				} else {
-					sibling = new(UnityEngine.Random.Range(downRange.x + 1, downRange.y), lastPoint.y);
+					int siblingColToUseIndex = UnityEngine.Random.Range(lpindex + 1, availableSpots.Count - 1);
+					int parentColToUseIndex = UnityEngine.Random.Range(lpindex, siblingColToUseIndex - 1);
+					sibling = new(availableSpots[siblingColToUseIndex], lastPoint.y);
 					siblingInputHitDir = EPuckMovementDirection.Down;
-					parent = new(UnityEngine.Random.Range(lastPoint.x + 1, sibling.x - 1), lastPoint.y);
+					parent = new(availableSpots[parentColToUseIndex], lastPoint.y);
+					// Fill in between spots as Claimed
+					// ... from lastPoint to parent
+					for (int j = lpindex; j < parentColToUseIndex; j++)
+						chosenPositions.Add(new(availableSpots[j], lastPoint.y), EPuckMovementDirection.Claimed);
+					// ... then from parent to sibling
+					for (int j = parentColToUseIndex + 1; j < siblingColToUseIndex; j++)
+						chosenPositions.Add(new(availableSpots[j], lastPoint.y), EPuckMovementDirection.Claimed);
 				}
 				parentSplitDir = EPuckMovementDirection.SplitHorizontal;
 				chosenPositions[lastPoint] = useUpSide ? EPuckMovementDirection.Down : EPuckMovementDirection.Up;
@@ -254,7 +373,7 @@ public class LevelManager : MonoBehaviour {
 			lastSplitDir = parentSplitDir;
 
 			{
-				StringBuilder str = new($"[LevelManager]: GENERATE ({difficulty}) | iteration: {i}");
+				StringBuilder str = new($"[LevelManager]: GENERATE ({difficulty}) | iteration: {i} | availableSpots ({lpindex}): {string.Join(", ", availableSpots)}");
 				str.Append('\n').Append(GetChosenPositionsAsGridStringBuilder(chosenPositions));
 				Debug.Log(str.ToString());
 			}
@@ -314,8 +433,9 @@ public class LevelManager : MonoBehaviour {
 			Debug.Log(str.ToString());
 		}
 
-		foreach (var (pos, _) in chosenPositions)
-			_currentLevel.Add(pos);
+		foreach (var (pos, dir) in chosenPositions)
+			if (dir != EPuckMovementDirection.Claimed)
+				_currentLevel.Add(pos);
 	}
 
 	public void StepLevel() {

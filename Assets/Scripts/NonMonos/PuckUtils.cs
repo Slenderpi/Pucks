@@ -12,6 +12,7 @@ namespace Pucks.Utilities {
 		public readonly static char PUCK_CHAR_LEFT = '<';
 		public readonly static char PUCK_CHAR_SPLIT_HORIZONTAL = '-';
 		public readonly static char PUCK_CHAR_SPLIT_VERTICAL = '|';
+		public readonly static char PUCK_CHAR_CLAIMED = 'x';
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static char PuckMovementToChar(EPuckMovementDirection state) => state switch {
@@ -23,6 +24,7 @@ namespace Pucks.Utilities {
 			EPuckMovementDirection.Right => PUCK_CHAR_RIGHT,
 			EPuckMovementDirection.SplitHorizontal => PUCK_CHAR_SPLIT_HORIZONTAL,
 			EPuckMovementDirection.SplitVertical => PUCK_CHAR_SPLIT_VERTICAL,
+			EPuckMovementDirection.Claimed => PUCK_CHAR_CLAIMED,
 			_ => '?'
 		};
 

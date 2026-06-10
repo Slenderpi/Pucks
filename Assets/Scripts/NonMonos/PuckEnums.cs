@@ -10,6 +10,7 @@ namespace Pucks {
         Left            = 0b1000,
         Right           = 0b10000,
         SplitHorizontal = 0b100000,
-        SplitVertical   = 0b1000000
+        SplitVertical   = 0b1000000,
+        Claimed         = 0b10000000
 	}
 }
