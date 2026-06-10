@@ -23,6 +23,13 @@ public class LevelManager : MonoBehaviour {
 	/// int: difficulty
 	/// </summary>
 	public static Action<int> A_OnLevelSpawned;
+	/// <summary>
+	/// Broadcasted if GenerateLevel() fails to generate a level.<br/>
+	/// int: difficulty<br/>
+	/// int: numGenProcessFails<br/>
+	/// int: numUnsovlableFails
+	/// </summary>
+	public static Action<int, int, int> A_OnLevelGenFailed;
 
 	[Tooltip("The value should be set to something that is <= WidthCount * HeightCount.")]
 	[SerializeField]
@@ -159,20 +166,30 @@ public class LevelManager : MonoBehaviour {
 
 	public void GenerateLevel(int difficulty) {
 		Assert.IsTrue(difficulty >= 0, $"[LevelManager]: GeneratedLevel() was given an invalid difficulty value of {difficulty}.");
-		int MAX_TRIES = 50;
-		int numFails = 0;
+		_difficulty = difficulty;
+		int MAX_TRIES = 100;
+		int numGenProcessFails = 0;
+		int numUnsovlableFails = 0;
 		do {
-			GenerateLevel_Implementation(difficulty);
+			if (!GenerateLevel_Implementation(difficulty)) {
+				numGenProcessFails++;
+				continue;
+			}
 			ResetLevel();
 			MoveStationaryPuck(_solutionPosition, _solutionDirection);
 			while (_movingPucks.Count > 0) // Brute force solution validation by stepping it until completion
 				StepLevel_Implementation();
 			if (_stationaryPucks.Count == 0)
 				break;
-			numFails++;
-		} while (numFails < MAX_TRIES);
-		if (numFails > 1) {
-			Debug.LogWarning($"[LevelManager]: Level generation failed {numFails} (max {MAX_TRIES}) times for difficulty {difficulty}.");
+			numUnsovlableFails++;
+		} while (numGenProcessFails + numUnsovlableFails < MAX_TRIES);
+		if (numGenProcessFails + numUnsovlableFails > 1) {
+			Debug.LogWarning($"[LevelManager]: Level generation failed {numGenProcessFails + numUnsovlableFails} (max {MAX_TRIES}) times for difficulty {difficulty}. Of them, {numGenProcessFails} were generation issues, and {numUnsovlableFails} were from impossible puzzles.");
+			if (numGenProcessFails + numUnsovlableFails == MAX_TRIES) {
+				ClearLevel();
+				A_OnLevelGenFailed?.Invoke(difficulty, numGenProcessFails, numUnsovlableFails);
+				return;
+			}
 		}
 		ResetLevel();
 		A_OnLevelSpawned?.Invoke(difficulty);
@@ -260,9 +277,8 @@ public class LevelManager : MonoBehaviour {
 		return lpindex;
 	}
 
-	private void GenerateLevel_Implementation(int difficulty) {
+	private bool GenerateLevel_Implementation(int difficulty) {
 		_currentLevel.Clear();
-		_difficulty = difficulty;
 
 		Dictionary<Vector2Int, EPuckMovementDirection> chosenPositions = new();
 		Vector2Int lastPoint = new(UnityEngine.Random.Range(2, HeightCount - 3), UnityEngine.Random.Range(2, WidthCount - 3));
@@ -284,15 +300,16 @@ public class LevelManager : MonoBehaviour {
 			int lpindex = 0;
 			if (lastSplitDir == EPuckMovementDirection.SplitHorizontal) {
 				lpindex = DetermineHorizontalRangeNEW(lastPoint, chosenPositions, availableSpots);
-				if (lpindex <= 1 && availableSpots.Count - lpindex < 1) {
-					Debug.LogWarning($"Can't fit iteration {i}! lastPoint: {lastPoint} | lastSplitDir: '{PuckUtil.PuckMovementToChar(lastSplitDir)}' | availableSpots ({lpindex}): [{availableSpots}]");
-					break;
+				if (lpindex <= 1 && availableSpots.Count - lpindex <= 1) {
+					Debug.LogWarning($"Can't fit iteration {i}! lastPoint: {lastPoint} | lastSplitDir: '{PuckUtil.PuckMovementToChar(lastSplitDir)}' | availableSpots ({lpindex}): [{string.Join(", ", availableSpots)}]");
+					lastSplitDir = EPuckMovementDirection.SplitVertical;
+					return false;
 				}
 
 				// If (leftUnusable) use right
 				// else if (rightUnusable) use left
 				// else use random
-				bool useLeftSide = lpindex <= 1 ? false : availableSpots.Count - lpindex < 1 ? true : Util.UnityRandomBool();
+				bool useLeftSide = lpindex <= 1 ? false : availableSpots.Count - lpindex <= 1 ? true : Util.UnityRandomBool();
 				//bool useLeftSide = false;
 				if (useLeftSide) {
 					int siblingColToUseIndex = UnityEngine.Random.Range(1, lpindex - 1);
@@ -325,15 +342,15 @@ public class LevelManager : MonoBehaviour {
 				chosenPositions[lastPoint] = useLeftSide ? EPuckMovementDirection.Right : EPuckMovementDirection.Left;
 			} else {
 				lpindex = DetermineVerticalRangeNEW(lastPoint, chosenPositions, availableSpots);
-				if (lpindex <= 1 && availableSpots.Count - lpindex < 1) {
-					Debug.LogWarning($"Can't fit iteration {i}! lastPoint: {lastPoint} | lastSplitDir: '{PuckUtil.PuckMovementToChar(lastSplitDir)}' | availableSpots ({lpindex}): [{availableSpots}]");
-					break;
+				if (lpindex <= 1 && availableSpots.Count - lpindex <= 1) {
+					Debug.LogWarning($"Can't fit iteration {i}! lastPoint: {lastPoint} | lastSplitDir: '{PuckUtil.PuckMovementToChar(lastSplitDir)}' | availableSpots ({lpindex}): [{string.Join(", ", availableSpots)}]");
+					return false;
 				}
 
 				// If (upUnusable) use down
 				// else if (downUnusable) use up
 				// else use random
-				bool useUpSide = lpindex <= 1 ? false : availableSpots.Count - lpindex < 1 ? true : Util.UnityRandomBool();
+				bool useUpSide = lpindex <= 1 ? false : availableSpots.Count - lpindex <= 1 ? true : Util.UnityRandomBool();
 				//bool useUpSide = true;
 				if (useUpSide) {
 					int siblingRowToUseIndex = UnityEngine.Random.Range(1, lpindex - 1);
@@ -349,9 +366,9 @@ public class LevelManager : MonoBehaviour {
 					for (int j = parentColToUseIndex + 1; j < siblingRowToUseIndex; j++)
 						chosenPositions.Add(new(availableSpots[j], lastPoint.y), EPuckMovementDirection.Claimed);
 				} else {
-					int siblingColToUseIndex = UnityEngine.Random.Range(lpindex + 1, availableSpots.Count - 1);
-					int parentColToUseIndex = UnityEngine.Random.Range(lpindex, siblingColToUseIndex - 1);
-					sibling = new(availableSpots[siblingColToUseIndex], lastPoint.y);
+					int siblingRowToUseIndex = UnityEngine.Random.Range(lpindex + 1, availableSpots.Count - 1);
+					int parentColToUseIndex = UnityEngine.Random.Range(lpindex, siblingRowToUseIndex - 1);
+					sibling = new(availableSpots[siblingRowToUseIndex], lastPoint.y);
 					siblingInputHitDir = EPuckMovementDirection.Down;
 					parent = new(availableSpots[parentColToUseIndex], lastPoint.y);
 					// Fill in between spots as Claimed
@@ -359,7 +376,7 @@ public class LevelManager : MonoBehaviour {
 					for (int j = lpindex; j < parentColToUseIndex; j++)
 						chosenPositions.Add(new(availableSpots[j], lastPoint.y), EPuckMovementDirection.Claimed);
 					// ... then from parent to sibling
-					for (int j = parentColToUseIndex + 1; j < siblingColToUseIndex; j++)
+					for (int j = parentColToUseIndex + 1; j < siblingRowToUseIndex; j++)
 						chosenPositions.Add(new(availableSpots[j], lastPoint.y), EPuckMovementDirection.Claimed);
 				}
 				parentSplitDir = EPuckMovementDirection.SplitHorizontal;
@@ -399,8 +416,10 @@ public class LevelManager : MonoBehaviour {
 					_solutionPosition = new(lastPoint.x, UnityEngine.Random.Range(rightRange.x, rightRange.y));
 					_solutionDirection = EPuckMovementDirection.Left;
 				}
-				if (chosenPositions.ContainsKey(_solutionPosition))
+				if (chosenPositions.ContainsKey(_solutionPosition)) {
 					Debug.LogWarning("[LevelManager]: The final Puck does not have space to be given an answer Puck.");
+					return false;
+				}
 			}
 		} else {
 			DetermineVerticalRange(lastPoint, chosenPositions, out Vector2Int upRange, out Vector2Int downRange);
@@ -421,8 +440,10 @@ public class LevelManager : MonoBehaviour {
 					_solutionPosition = new(UnityEngine.Random.Range(downRange.x, downRange.y), lastPoint.y);
 					_solutionDirection = EPuckMovementDirection.Up;
 				}
-				if (chosenPositions.ContainsKey(_solutionPosition))
+				if (chosenPositions.ContainsKey(_solutionPosition)) {
 					Debug.LogWarning("[LevelManager]: The final Puck does not have space to be given an answer Puck.");
+					return false;
+				}
 			}
 		}
 		chosenPositions.Add(_solutionPosition, _solutionDirection);
@@ -436,6 +457,7 @@ public class LevelManager : MonoBehaviour {
 		foreach (var (pos, dir) in chosenPositions)
 			if (dir != EPuckMovementDirection.Claimed)
 				_currentLevel.Add(pos);
+		return true;
 	}
 
 	public void StepLevel() {
