@@ -267,11 +267,11 @@ public class LevelManager : MonoBehaviour {
 		Dictionary<Vector2Int, EPuckMovementDirection> chosenPositions = new();
 		Vector2Int lastPoint = new(UnityEngine.Random.Range(2, HeightCount - 3), UnityEngine.Random.Range(2, WidthCount - 3));
 		// If |, that means it desires an instigator of ^ or v, and that its children to hit are < and >. That is, we create <|> or ^-v
-		EPuckMovementDirection lastSplitDir = EPuckMovementDirection.SplitHorizontal; // Util.UnityRandomBool() ? EPuckMovementDirection.SplitHorizontal : EPuckMovementDirection.SplitVertical;
+		EPuckMovementDirection lastSplitDir = Util.UnityRandomBool() ? EPuckMovementDirection.SplitHorizontal : EPuckMovementDirection.SplitVertical;
 		// A list of spots in the current row/col that a new sibling and parent will can be placed at.
 		List<int> availableSpots = new(Math.Max(WidthCount, HeightCount));
 
-		Debug.Log($"[LevelManager]: GENERATE BEGIN | lastPoint: {lastPoint} | lastSplitDir: {PuckUtil.PuckMovementToChar(lastSplitDir)}");
+		//Debug.Log($"[LevelManager]: GENERATE BEGIN | lastPoint: {lastPoint} | lastSplitDir: {PuckUtil.PuckMovementToChar(lastSplitDir)}");
 
 		chosenPositions.Add(lastPoint, lastSplitDir);
 		for (int i = difficulty; i > 0; i--) {
@@ -372,11 +372,11 @@ public class LevelManager : MonoBehaviour {
 			lastPoint = parent;
 			lastSplitDir = parentSplitDir;
 
-			{
-				StringBuilder str = new($"[LevelManager]: GENERATE ({difficulty}) | iteration: {i} | availableSpots ({lpindex}): {string.Join(", ", availableSpots)}");
-				str.Append('\n').Append(GetChosenPositionsAsGridStringBuilder(chosenPositions));
-				Debug.Log(str.ToString());
-			}
+			//{
+			//	StringBuilder str = new($"[LevelManager]: GENERATE ({difficulty}) | iteration: {i} | availableSpots ({lpindex}): {string.Join(", ", availableSpots)}");
+			//	str.Append('\n').Append(GetChosenPositionsAsGridStringBuilder(chosenPositions));
+			//	Debug.Log(str.ToString());
+			//}
 		}
 
 		// Now create answer Puck
@@ -427,11 +427,11 @@ public class LevelManager : MonoBehaviour {
 		}
 		chosenPositions.Add(_solutionPosition, _solutionDirection);
 
-		{
-			StringBuilder str = new($"[LevelManager]: GENERATE ({difficulty}) | iteration: {0}");
-			str.Append('\n').Append(GetChosenPositionsAsGridStringBuilder(chosenPositions));
-			Debug.Log(str.ToString());
-		}
+		//{
+		//	StringBuilder str = new($"[LevelManager]: GENERATE ({difficulty}) | iteration: {0}");
+		//	str.Append('\n').Append(GetChosenPositionsAsGridStringBuilder(chosenPositions));
+		//	Debug.Log(str.ToString());
+		//}
 
 		foreach (var (pos, dir) in chosenPositions)
 			if (dir != EPuckMovementDirection.Claimed)
