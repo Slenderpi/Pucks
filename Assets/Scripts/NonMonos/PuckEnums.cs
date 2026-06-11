@@ -13,4 +13,9 @@ namespace Pucks {
         SplitVertical   = 0b1000000,
         Claimed         = 0b10000000
 	}
+
+    public enum EPuckType {
+        Quad = 1,
+        Hex = 2,
+    }
 }

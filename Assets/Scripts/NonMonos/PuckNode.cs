@@ -1,25 +1,23 @@
 using UnityEngine;
 
 namespace Pucks {
-	public class PuckNode {
-
-		public int Id { get; }
+	public abstract class PuckNode {
 
 		/// <summary>
 		/// IMPORTANT: stored as (x, y) = (row, col)
 		/// </summary>
 		public Vector2Int GridPoint {
-			get => _gridPos;
+			get => GridPos;
 			set {
 				PreviousGridPoint = GridPoint;
-				_gridPos = value;
+				GridPos = value;
 			}
 		
 		}
 
-		public Vector2Int PreviousGridPoint { get; private set; }
+		public Vector2Int PreviousGridPoint { get; protected set; }
 
-		Vector2Int _gridPos;
+		protected Vector2Int GridPos;
 		
 		/// <summary>
 		/// Determines if this Puck is stationary or moving up/down/left/right.
@@ -28,40 +26,39 @@ namespace Pucks {
 
 		public bool IsStationary => MovementDirection == EPuckMovementDirection.Stationary;
 
+		public bool IsMoving => MovementDirection switch {
+			EPuckMovementDirection.Up or EPuckMovementDirection.Down or EPuckMovementDirection.Left or EPuckMovementDirection.Right => true,
+			_ => false
+		};
 
 
-		public PuckNode(int row=0, int col=0, EPuckMovementDirection moveDir=EPuckMovementDirection.Stationary) {
-			GridPoint = new(row, col);
-			PreviousGridPoint = GridPoint;
-			MovementDirection = moveDir;
-			Id = GenerateId();
+
+		/// <summary>
+		/// Initialize default Puck at (0, 0) in Stationary state.
+		/// </summary>
+		public PuckNode() {
+			GridPoint = new(0, 0);
+			PreviousGridPoint = new(0, 0);
+			MovementDirection = EPuckMovementDirection.Stationary;
 		}
+
+		//public PuckNode(int row=0, int col=0, EPuckMovementDirection moveDir=EPuckMovementDirection.Stationary) {
+		//	GridPoint = new(row, col);
+		//	PreviousGridPoint = GridPoint;
+		//	MovementDirection = moveDir;
+		//}
 
 		/// <summary>
 		/// Make this Puck update its GridPosition based on its current MovementDirection.
 		/// </summary>
 		/// <exception cref="UnityException">If the MovementDirection is not Up, Down, Left, or Right.</exception>
-		public void Move() => GridPoint = MovementDirection switch {
-			EPuckMovementDirection.Up => new(GridPoint.x - 1, GridPoint.y),
-			EPuckMovementDirection.Down => new(GridPoint.x + 1, GridPoint.y),
-			EPuckMovementDirection.Left => new(GridPoint.x, GridPoint.y - 1),
-			EPuckMovementDirection.Right => new(GridPoint.x, GridPoint.y + 1),
-			_ => throw new UnityException("[PuckNode]: Move() was called on a Puck that shouldn't be moving."),
-		};
+		public abstract void Move();
 
 		/// <summary>
-		/// Returns the split type that would result if this moving Puck hit a stationary Puck.
+		/// This method handles Puck collision. Should only be called on a moving Puck.
 		/// </summary>
-		public EPuckMovementDirection GetSplitDirection() =>
-			MovementDirection == EPuckMovementDirection.Up || MovementDirection == EPuckMovementDirection.Down
-			? EPuckMovementDirection.SplitHorizontal
-			: EPuckMovementDirection.SplitVertical;
-
-		static int _id_DoNotTouch = 1;
-		protected static int GenerateId() {
-			_id_DoNotTouch = (_id_DoNotTouch + 1) % 10000000;
-			return _id_DoNotTouch;
-		}
+		/// <param name="instigated"></param>
+		public abstract void OnHitStationaryPuck(PuckNode instigated);
 
 	}
 }

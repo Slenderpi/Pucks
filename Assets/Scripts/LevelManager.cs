@@ -37,8 +37,12 @@ public class LevelManager : MonoBehaviour {
 
 	public static LevelManager Singleton;
 
+	public EPuckType PuckType = EPuckType.Quad;
+
 	[SerializeField]
-	PuckMover _puckPrefab;
+	PuckMover _quadPuckPrefab;
+	[SerializeField]
+	PuckMover _hexPuckPrefab;
 
 	/// <summary>
 	/// Number of columns in the level grid.
@@ -481,13 +485,9 @@ public class LevelManager : MonoBehaviour {
 			p.Move();
 			if (_stationaryPucks.ContainsKey(p.GridPoint)) {
 				numCollisions++;
-				if (p.GetSplitDirection() == EPuckMovementDirection.SplitHorizontal) {
-					p.MovementDirection = EPuckMovementDirection.Left;
-					MoveStationaryPuck(p.GridPoint, EPuckMovementDirection.Right);
-				} else {
-					p.MovementDirection = EPuckMovementDirection.Up;
-					MoveStationaryPuck(p.GridPoint, EPuckMovementDirection.Down);
-				}
+				PuckNode instigated = _stationaryPucks[p.GridPoint];
+				p.OnHitStationaryPuck(instigated);
+				TransferPuckFromStationaryToMoving(instigated);
 			}
 		}
 		for (int i = 0; i < _movingPucks.Count; i++) {
@@ -512,7 +512,11 @@ public class LevelManager : MonoBehaviour {
 		List<int> puckManDists = new();
 		// Create stationary PuckNodes
 		foreach (var pos in _currentLevel) {
-			PuckNode puck = new(pos.x, pos.y);
+			PuckNode puck = PuckType switch {
+				EPuckType.Quad => new QuadPuck(pos.x, pos.y),
+				EPuckType.Hex => new HexPuck(pos.x, pos.y),
+				_ => new QuadPuck(pos.x, pos.y)
+			};
 			int manDist = pos.x + pos.y;
 			int index = puckManDists.BinarySearch(manDist);
 			if (index < 0) {
@@ -648,6 +652,11 @@ public class LevelManager : MonoBehaviour {
 		HeightCount - 1 - Mathf.RoundToInt((position.y - _positionOffset.y - PuckSize * 0.5f) / PuckSize),
 		Mathf.RoundToInt((position.x - _positionOffset.x - PuckSize * 0.5f) / PuckSize)
 	);
+
+	void TransferPuckFromStationaryToMoving(PuckNode p) {
+		_stationaryPucks.Remove(p.GridPoint);
+		_movingPucks.Add(p);
+	}
 
 	void MoveStationaryPuck(Vector2Int position, EPuckMovementDirection direction) {
 		PuckNode p = _stationaryPucks[position];
@@ -812,10 +821,20 @@ public class LevelManager : MonoBehaviour {
 
 	void CreatePuckMoverPool() {
 		for (int i = 0; i < PUCK_MOVER_POOL_SIZE; i++) {
-			PuckMover pm = Instantiate(_puckPrefab);
+			PuckMover pm = Instantiate(PuckType switch {
+				EPuckType.Quad => _quadPuckPrefab,
+				EPuckType.Hex => _hexPuckPrefab,
+				_ => throw new InvalidOperationException("[LevelManager]: CreatePuckMoverPool() called with an invalid EPuckType to use!")
+			});
 			pm.gameObject.SetActive(false);
 			_puckMoverPool.Add(pm);
 		}
+	}
+
+	void DestroyPuckMoverPool() {
+		for (int i = 0; i < PUCK_MOVER_POOL_SIZE; i++)
+			Destroy(_puckMoverPool[i]);
+		_puckMoverPool.Clear();
 	}
 
 	Vector3 GetLerpedPosition(PuckNode p) => Vector3.Lerp(

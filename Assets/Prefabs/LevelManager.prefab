@@ -44,8 +44,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 53de93b3bb22e2841a8020a2230ba380, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LevelManager
-  _puckPrefab: {fileID: 3050537813321254843, guid: 6365be0f239768544ad47833f25d7029, type: 3}
+  PUCK_MOVER_POOL_SIZE: 320
+  _quadPuckPrefab: {fileID: 3050537813321254843, guid: 6365be0f239768544ad47833f25d7029, type: 3}
+  _hexPuckPrefab: {fileID: 3050537813321254843, guid: 1c459e6071c703843b0ebb5d5c1b9feb, type: 3}
+  _puckType: 1
   WidthCount: 40
   HeightCount: 32
   PuckSize: 0.5
   StepUpdateDelay: 0.05
+  _updateManually: 0
+  _startingDifficulty: 0
