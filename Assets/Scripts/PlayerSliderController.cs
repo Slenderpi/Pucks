@@ -34,70 +34,74 @@ public class PlayerSliderControl : MonoBehaviour {
 	// To see these visuals in-game, make sure the "Gizmos" button in the top right of the Game window is toggled on
 	private void Update() {
 		if (_isDragging) {
-			Vector3 mpos = GetMouseWorldPosition();
-			Vector3 dragVector = mpos - _mouseSelectStart;
-			if (SuccessfullySelectedPuck()) {
-				Vector3 puckPos = LevelManager.Singleton.PointToPosition(_selectedPuck.GridPoint);
-				Vector3 alignedDragVector = (Mathf.Abs(dragVector.x) > Mathf.Abs(dragVector.y) ? new Vector3(Mathf.Sign(dragVector.x), 0, 0) : new Vector3(0, Mathf.Sign(dragVector.y), 0));
-				_dragLine.SetPosition(1, alignedDragVector * 5000 + _dragLine.GetPosition(0));
-				if (IsDragDistBigEnough(dragVector)) {
-					if (!_dragLine.enabled)
-						_dragLine.enabled = true;
-					Util.D_DrawBox(puckPos, new(LevelManager.Singleton.PuckSize + 0.01f), Color.cyan); // slider
-					Util.D_DrawArrowFromTo(_mouseSelectStart, mpos, Color.green); // dragVector
-					Util.D_DrawArrowFromTo(
-						puckPos,
-						alignedDragVector * 2f + puckPos,
-						Color.cyan
-					); // moveDir
-				} else {
-					if (_dragLine.enabled)
-						_dragLine.enabled = false;
-					Util.D_DrawBox(puckPos, new(LevelManager.Singleton.PuckSize + 0.01f), Color.yellow); // slider
-					Util.D_DrawArrowFromTo(_mouseSelectStart, mpos, Color.yellow); // dragVector
-				}
-			} else {
-				Debug.DrawRay( // dragVector
-					_mouseSelectStart,
-					dragVector,
-					Color.red,
-					duration: 0,
-					depthTest: false
-				);
-			}
+			// TODO: replace
+			//Vector3 mpos = GetMouseWorldPosition();
+			//Vector3 dragVector = mpos - _mouseSelectStart;
+			//if (SuccessfullySelectedPuck()) {
+			//	Vector3 puckPos = LevelManager.Singleton.PointToPosition(_selectedPuck.GridPoint);
+			//	Vector3 alignedDragVector = (Mathf.Abs(dragVector.x) > Mathf.Abs(dragVector.y) ? new Vector3(Mathf.Sign(dragVector.x), 0, 0) : new Vector3(0, Mathf.Sign(dragVector.y), 0));
+			//	_dragLine.SetPosition(1, alignedDragVector * 5000 + _dragLine.GetPosition(0));
+			//	if (IsDragDistBigEnough(dragVector)) {
+			//		if (!_dragLine.enabled)
+			//			_dragLine.enabled = true;
+			//		Util.D_DrawBox(puckPos, new(LevelManager.Singleton.PuckSize + 0.01f), Color.cyan); // slider
+			//		Util.D_DrawArrowFromTo(_mouseSelectStart, mpos, Color.green); // dragVector
+			//		Util.D_DrawArrowFromTo(
+			//			puckPos,
+			//			alignedDragVector * 2f + puckPos,
+			//			Color.cyan
+			//		); // moveDir
+			//	} else {
+			//		if (_dragLine.enabled)
+			//			_dragLine.enabled = false;
+			//		Util.D_DrawBox(puckPos, new(LevelManager.Singleton.PuckSize + 0.01f), Color.yellow); // slider
+			//		Util.D_DrawArrowFromTo(_mouseSelectStart, mpos, Color.yellow); // dragVector
+			//	}
+			//} else {
+			//	Debug.DrawRay( // dragVector
+			//		_mouseSelectStart,
+			//		dragVector,
+			//		Color.red,
+			//		duration: 0,
+			//		depthTest: false
+			//	);
+			//}
 		} else {
-			PuckNode p = LevelManager.GetPuckAt(GetMouseWorldPosition());
-			if (p == null) {
-				if (_hoveredPuckMover != null) {
-					_hoveredPuckMover.OnHoverEnd();
-					_hoveredPuckMover = null;
-				}
-			} else {
-				PuckMover pm = LevelManager.GetPuckMoverFromPuck(p);
-				if (_hoveredPuckMover == null) {
-					_hoveredPuckMover = pm;
-					_hoveredPuckMover.OnHoverBegin();
-				} else if (pm != _hoveredPuckMover) {
-					_hoveredPuckMover.OnHoverEnd();
-					_hoveredPuckMover = pm;
-					pm.OnHoverBegin();
-				}
-				Util.D_DrawBox(
-					LevelManager.Singleton.PointToPosition(p.GridPoint),
-					LevelManager.Singleton.PuckSize + 0.01f, Color.red, 0, false
-				);
-			}
+			// TODO: replace
+			//PuckNode p = LevelManager.GetPuckAt(GetMouseWorldPosition());
+			//if (p == null) {
+			//	if (_hoveredPuckMover != null) {
+			//		_hoveredPuckMover.OnHoverEnd();
+			//		_hoveredPuckMover = null;
+			//	}
+			//} else {
+			//	PuckMover pm = LevelManager.GetPuckMoverFromPuck(p);
+			//	if (_hoveredPuckMover == null) {
+			//		_hoveredPuckMover = pm;
+			//		_hoveredPuckMover.OnHoverBegin();
+			//	} else if (pm != _hoveredPuckMover) {
+			//		_hoveredPuckMover.OnHoverEnd();
+			//		_hoveredPuckMover = pm;
+			//		pm.OnHoverBegin();
+			//	}
+			//	Util.D_DrawBox(
+			//		LevelManager.Singleton.PointToPosition(p.GridPoint),
+			//		LevelManager.Singleton.PuckSize + 0.01f, Color.red, 0, false
+			//	);
+			//}
 		}
 	}
 
 	private void OnSelectSliderStarted(InputAction.CallbackContext _) {
 		_isDragging = true;
 		_mouseSelectStart = GetMouseWorldPosition();
-		_selectedPuck = LevelManager.GetPuckAt(_mouseSelectStart);
+		// TODO: replace
+		//_selectedPuck = LevelManager.GetPuckAt(_mouseSelectStart);
 		if (SuccessfullySelectedPuck()) {
 			_hoveredPuckMover = LevelManager.GetPuckMoverFromPuck(_selectedPuck);
 			_hoveredPuckMover.OnSelectBegin();
-			_dragLine.SetPosition(0, LevelManager.Singleton.PointToPosition(_selectedPuck.GridPoint));
+			// TODO: replace
+			//_dragLine.SetPosition(0, LevelManager.Singleton.PointToPosition(_selectedPuck.GridPoint));
 		}
 	}
 
@@ -111,7 +115,8 @@ public class PlayerSliderControl : MonoBehaviour {
 		Vector3 dragVector = GetMouseWorldPosition() - _mouseSelectStart;
 		if (!SuccessfullySelectedPuck() || !IsDragDistBigEnough(dragVector))
 			return;
-		LevelManager.StartLevelWithChoice(_selectedPuck.GridPoint, GetMovementDirection(dragVector));
+		// TODO: replace
+		//LevelManager.StartLevelWithChoice(_selectedPuck.GridPoint, GetMovementDirection(dragVector));
 		_selectedPuck = null;
 	}
 
@@ -126,9 +131,9 @@ public class PlayerSliderControl : MonoBehaviour {
 
 	bool IsDragDistBigEnough(Vector3 dragVector) => Vector3.SqrMagnitude(dragVector) >= Util.pow2(_dragDeadzone);
 
-	EPuckMovementDirection GetMovementDirection(Vector3 dragVector) =>
-		Mathf.Abs(dragVector.x) > Mathf.Abs(dragVector.y)
-		? (dragVector.x > 0 ? EPuckMovementDirection.Right : EPuckMovementDirection.Left)
-		: (dragVector.y > 0 ? EPuckMovementDirection.Up : EPuckMovementDirection.Down);
+	//EPuckMovementDirection GetMovementDirection(Vector3 dragVector) =>
+	//	Mathf.Abs(dragVector.x) > Mathf.Abs(dragVector.y)
+	//	? (dragVector.x > 0 ? EPuckMovementDirection.Right : EPuckMovementDirection.Left)
+	//	: (dragVector.y > 0 ? EPuckMovementDirection.Up : EPuckMovementDirection.Down);
 
 }

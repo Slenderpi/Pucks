@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2165153666204351249}
   - component: {fileID: 6566920083635990324}
+  - component: {fileID: 707681841990716929}
   m_Layer: 0
   m_Name: LevelManager
   m_TagString: Untagged
@@ -45,12 +46,28 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LevelManager
   PUCK_MOVER_POOL_SIZE: 320
+  PuckType: 1
+  PuckMoverPool: {fileID: 707681841990716929}
   _quadPuckPrefab: {fileID: 3050537813321254843, guid: 6365be0f239768544ad47833f25d7029, type: 3}
   _hexPuckPrefab: {fileID: 3050537813321254843, guid: 1c459e6071c703843b0ebb5d5c1b9feb, type: 3}
-  _puckType: 1
   WidthCount: 40
   HeightCount: 32
   PuckSize: 0.5
   StepUpdateDelay: 0.05
   _updateManually: 0
   _startingDifficulty: 0
+--- !u!114 &707681841990716929
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1082504869125115283}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d10e3dd99835f8459e5436c092aadb7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PuckMoverPool
+  _startingCapacity: 100
+  _capacityGrowth: 10
+  PuckMoverPrefab: {fileID: 3050537813321254843, guid: 6365be0f239768544ad47833f25d7029, type: 3}
