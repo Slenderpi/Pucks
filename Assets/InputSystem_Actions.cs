@@ -120,6 +120,15 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""initialStateCheck"": false
                 },
                 {
+                    ""name"": ""ChangePuckType"",
+                    ""type"": ""Button"",
+                    ""id"": ""1d063a61-84c7-4fd6-b1b4-479fc2a9b8fc"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
                     ""name"": ""GenerateFilledLevel"",
                     ""type"": ""Button"",
                     ""id"": ""ca3850ac-0912-4511-b307-ce5b7aaedcba"",
@@ -541,6 +550,17 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""ToggleManualStepping"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""7ec79cd7-3632-45cc-b6cd-c81619b5c7a2"",
+                    ""path"": ""<Keyboard>/p"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""ChangePuckType"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -1633,6 +1653,7 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         m_Debug_ResetLevel = m_Debug.FindAction("ResetLevel", throwIfNotFound: true);
         m_Debug_StepPucks = m_Debug.FindAction("StepPucks", throwIfNotFound: true);
         m_Debug_ToggleManualStepping = m_Debug.FindAction("ToggleManualStepping", throwIfNotFound: true);
+        m_Debug_ChangePuckType = m_Debug.FindAction("ChangePuckType", throwIfNotFound: true);
         m_Debug_GenerateFilledLevel = m_Debug.FindAction("GenerateFilledLevel", throwIfNotFound: true);
         m_Debug_GenerateLevel0 = m_Debug.FindAction("GenerateLevel0", throwIfNotFound: true);
         m_Debug_GenerateLevel1 = m_Debug.FindAction("GenerateLevel1", throwIfNotFound: true);
@@ -1759,6 +1780,7 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
     private readonly InputAction m_Debug_ResetLevel;
     private readonly InputAction m_Debug_StepPucks;
     private readonly InputAction m_Debug_ToggleManualStepping;
+    private readonly InputAction m_Debug_ChangePuckType;
     private readonly InputAction m_Debug_GenerateFilledLevel;
     private readonly InputAction m_Debug_GenerateLevel0;
     private readonly InputAction m_Debug_GenerateLevel1;
@@ -1796,6 +1818,10 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Debug/ToggleManualStepping".
         /// </summary>
         public InputAction @ToggleManualStepping => m_Wrapper.m_Debug_ToggleManualStepping;
+        /// <summary>
+        /// Provides access to the underlying input action "Debug/ChangePuckType".
+        /// </summary>
+        public InputAction @ChangePuckType => m_Wrapper.m_Debug_ChangePuckType;
         /// <summary>
         /// Provides access to the underlying input action "Debug/GenerateFilledLevel".
         /// </summary>
@@ -1887,6 +1913,9 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @ToggleManualStepping.started += instance.OnToggleManualStepping;
             @ToggleManualStepping.performed += instance.OnToggleManualStepping;
             @ToggleManualStepping.canceled += instance.OnToggleManualStepping;
+            @ChangePuckType.started += instance.OnChangePuckType;
+            @ChangePuckType.performed += instance.OnChangePuckType;
+            @ChangePuckType.canceled += instance.OnChangePuckType;
             @GenerateFilledLevel.started += instance.OnGenerateFilledLevel;
             @GenerateFilledLevel.performed += instance.OnGenerateFilledLevel;
             @GenerateFilledLevel.canceled += instance.OnGenerateFilledLevel;
@@ -1949,6 +1978,9 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @ToggleManualStepping.started -= instance.OnToggleManualStepping;
             @ToggleManualStepping.performed -= instance.OnToggleManualStepping;
             @ToggleManualStepping.canceled -= instance.OnToggleManualStepping;
+            @ChangePuckType.started -= instance.OnChangePuckType;
+            @ChangePuckType.performed -= instance.OnChangePuckType;
+            @ChangePuckType.canceled -= instance.OnChangePuckType;
             @GenerateFilledLevel.started -= instance.OnGenerateFilledLevel;
             @GenerateFilledLevel.performed -= instance.OnGenerateFilledLevel;
             @GenerateFilledLevel.canceled -= instance.OnGenerateFilledLevel;
@@ -2592,6 +2624,13 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnToggleManualStepping(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "ChangePuckType" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnChangePuckType(InputAction.CallbackContext context);
         /// <summary>
         /// Method invoked when associated input action "GenerateFilledLevel" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>

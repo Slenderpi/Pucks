@@ -34,6 +34,15 @@
                     "initialStateCheck": false
                 },
                 {
+                    "name": "ChangePuckType",
+                    "type": "Button",
+                    "id": "1d063a61-84c7-4fd6-b1b4-479fc2a9b8fc",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
                     "name": "GenerateFilledLevel",
                     "type": "Button",
                     "id": "ca3850ac-0912-4511-b307-ce5b7aaedcba",
@@ -455,6 +464,17 @@
                     "processors": "",
                     "groups": "",
                     "action": "ToggleManualStepping",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "7ec79cd7-3632-45cc-b6cd-c81619b5c7a2",
+                    "path": "<Keyboard>/p",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ChangePuckType",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

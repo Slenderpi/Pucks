@@ -178,10 +178,13 @@ namespace Pucks.Level {
 			if (numGenProcessFails + numUnsovlableFails > 0) {
 				Debug.LogWarning($"[LevelManager]: Level generation failed {numGenProcessFails + numUnsovlableFails} (max {MAX_TRIES}) times for difficulty {difficulty}. Of them, {numGenProcessFails} were generation issues, and {numUnsovlableFails} were from impossible puzzles.");
 				if (numGenProcessFails + numUnsovlableFails == MAX_TRIES) {
-					ClearGeneratedLevel();
 					ClearLevel();
 					A_OnLevelGenFailed?.Invoke(difficulty, numGenProcessFails, numUnsovlableFails);
-					return;
+					if (numGenProcessFails > 0) {
+						// Allow level spawning anyway if the only issue was unsolvability. Otherwise, clear generated level.
+						ClearGeneratedLevel();
+						return;
+					}
 				}
 			}
 			A_OnLevelGenerated?.Invoke();

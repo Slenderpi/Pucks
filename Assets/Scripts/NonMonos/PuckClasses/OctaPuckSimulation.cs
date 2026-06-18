@@ -46,7 +46,20 @@ public class OctaPuckSimulation : PuckSimulation {
 		return grid;
 	}
 
+	void GenerateFilledLevel() {
+		Difficulty = -1;
+		for (int r = 0; r < HeightCount; r++)
+			for (int c = 0; c < WidthCount; c++)
+				CurrentLevel.Add(new(r, c));
+		SolutionPosition = new(HeightCount / 2, WidthCount / 2);
+		SolutionDirection = new(1, 0);
+	}
+
 	protected override bool GenerateLevel_Implementation() {
+		if (Difficulty == -1) {
+			GenerateFilledLevel();
+			return true;
+		}
 		CurrentLevel.Add(new(4, 4));
 		CurrentLevel.Add(new(5, 5));
 		CurrentLevel.Add(new(0, 5));

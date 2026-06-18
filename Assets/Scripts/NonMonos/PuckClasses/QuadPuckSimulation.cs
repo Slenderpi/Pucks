@@ -26,7 +26,6 @@ namespace Pucks.Level.Quad {
 
 
 		void GenerateFilledLevel() {
-			Difficulty = -1;
 			for (int r = 0; r < HeightCount; r++)
 				for (int c = 0; c < WidthCount; c++)
 					CurrentLevel.Add(new(r, c));

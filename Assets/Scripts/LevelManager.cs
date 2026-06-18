@@ -231,6 +231,7 @@ public class LevelManager : MonoBehaviour {
 		da.GenerateEasierLevel.started += _ => _puckSimulator.GeneratePrevLevel();
 		da.GenerateHarderLevel.started += _ => _puckSimulator.GenerateNextLevel();
 		da.RegenerateCurrent.started += _ => _puckSimulator.RegenerateLevel();
+		da.ChangePuckType.started += OnChangePuckType;
 	}
 
 	private void OnResetLevelActionStarted(InputAction.CallbackContext context) {
@@ -246,6 +247,16 @@ public class LevelManager : MonoBehaviour {
 		} else {
 			_puckSimulator.Step();
 		}
+	}
+
+	private void OnChangePuckType(InputAction.CallbackContext context) {
+		PuckType = PuckType switch {
+			EPuckType.Quad => EPuckType.Octa,
+			EPuckType.Octa => EPuckType.Quad,
+			_ => EPuckType.Quad
+		};
+		ChangePuckSimulator(PuckType);
+		_puckSimulator.GenerateLevel(_startingDifficulty);
 	}
 
 	void BindPuckMoversToSpawnedLevel() {
