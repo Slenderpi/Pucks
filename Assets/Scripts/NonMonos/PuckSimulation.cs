@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -10,6 +11,31 @@ namespace Pucks.Level {
 	/// A PuckSimulation is a class that handles the movement, collision detection/logic, etc.
 	/// </summary>
 	public abstract class PuckSimulation {
+
+		/// <summary>
+		/// Broadcasted after every Step() call.<br/>
+		/// int: numCollisions, the number of moving->stationary collisions this step
+		/// </summary>
+		public Action<int> A_OnLevelStepped;
+		/// <summary>
+		/// Broadcasted after GenerateLevel() has finished.
+		/// </summary>
+		public Action A_OnLevelSpawned;
+		/// <summary>
+		/// Broadcasted after ClearLevel() is called.
+		/// </summary>
+		public Action A_OnLevelCleared;
+		/// <summary>
+		/// Broadcasted when GenerateLevel() generates a level.
+		/// </summary>
+		public Action A_OnLevelGenerated;
+		/// <summary>
+		/// Broadcasted if GenerateLevel() fails to generate a level.<br/>
+		/// int: difficulty<br/>
+		/// int: numGenProcessFails<br/>
+		/// int: numUnsovlableFails
+		/// </summary>
+		public Action<int, int, int> A_OnLevelGenFailed;
 
 		/// <summary>
 		/// Number of columns in the level grid.
@@ -61,6 +87,8 @@ namespace Pucks.Level {
 		public Vector2Int SolutionDirection { get; protected set; }
 		protected int Difficulty = 0;
 
+		public List<int> PuckSpawnOrderList { get; protected set; } = new();
+
 
 
 		/// <summary>
@@ -68,27 +96,64 @@ namespace Pucks.Level {
 		/// </summary>
 		/// <returns></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool GenerateNextLevel() => GenerateLevel(++Difficulty);
+		public void GenerateNextLevel() => GenerateLevel(Difficulty + 1);
 
 		/// <summary>
 		/// Decrement Difficulty and generate its level. Stops at difficulty 0.
 		/// </summary>
 		/// <returns></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool GeneratePrevLevel() => GenerateLevel(Difficulty > 0 ? --Difficulty : Difficulty);
+		public void GeneratePrevLevel() => GenerateLevel(Math.Max(Difficulty - 1, 0));
 
 		/// <summary>
-		/// Generates a level with a given difficulty, and updates Difficulty.
+		/// Generates a level for the current value of Difficulty. CurrentLevel will already be clear before this function is called.
 		/// </summary>
 		/// <param name="difficulty"></param>
 		/// <returns></returns>
-		public abstract bool GenerateLevel(int difficulty);
+		protected abstract bool GenerateLevel_Implementation();
 
 		/// <summary>
-		/// Fills the grid full with Pucks.
-		/// Remember to call ClearLevel() if a level already exists.
+		/// Generates a level for a specific difficulty.<br/>
+		/// The generated level will be regenerated if generation fails or if TestGeneratedLevel() fails,
+		/// up to a maximum number of tries.<br/>
+		/// A_OnLevelGenerated is broadcast if a valid level is generated.<br/>
+		/// A_OnLevelGenFailed is broadcast if a valid level cannot be generated within the number of max tries.
 		/// </summary>
-		public abstract void GenerateFilledLevel();
+		/// <param name="difficulty"></param>
+		public void GenerateLevel(int difficulty) {
+			Difficulty = difficulty;
+			int MAX_TRIES = 100;
+			int numGenProcessFails = 0;
+			int numUnsovlableFails = 0;
+			do {
+				CurrentLevel.Clear();
+				if (!GenerateLevel_Implementation()) {
+					numGenProcessFails++;
+					continue;
+				}
+				if (TestGeneratedLevel())
+					break;
+				numUnsovlableFails++;
+			} while (numGenProcessFails + numUnsovlableFails < MAX_TRIES);
+			if (numGenProcessFails + numUnsovlableFails > 0) {
+				Debug.LogWarning($"[LevelManager]: Level generation failed {numGenProcessFails + numUnsovlableFails} (max {MAX_TRIES}) times for difficulty {difficulty}. Of them, {numGenProcessFails} were generation issues, and {numUnsovlableFails} were from impossible puzzles.");
+				if (numGenProcessFails + numUnsovlableFails == MAX_TRIES) {
+					CurrentLevel.Clear();
+					ClearLevel();
+					A_OnLevelGenFailed?.Invoke(difficulty, numGenProcessFails, numUnsovlableFails);
+					return;
+				}
+			}
+			A_OnLevelGenerated?.Invoke();
+		}
+
+		/// <summary>
+		/// Regenerates the current level with the same difficulty.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void RegenerateLevel() {
+			GenerateLevel(Difficulty);
+		}
 
 		/// <summary>
 		/// Determines how a Puck moves.<br/>
@@ -105,6 +170,10 @@ namespace Pucks.Level {
 		/// </summary>
 		/// <param name="instigated"></param>
 		protected abstract void OnHitStationaryPuck(PuckNode instigator, PuckNode instigated);
+
+		public void Step() {
+			A_OnLevelStepped?.Invoke(Step_Implementation());
+		}
 
 		/// <summary>
 		/// Step the level.<br/>
@@ -124,7 +193,7 @@ namespace Pucks.Level {
 		/// </code>
 		/// </summary>
 		/// <returns>The number of collisions this step.</returns>
-		public virtual int Step() {
+		protected virtual int Step_Implementation() {
 			foreach (PuckNode p in ExitedPucks) {
 				MovePuck(p);
 			}
@@ -155,39 +224,53 @@ namespace Pucks.Level {
 		/// <summary>
 		/// Fills the internal StationaryPucks memory with PuckNodes based on the current generated level layout.<br/>
 		/// Ensure you called ClearLevel() before already.<br/>
-		/// Returns a list of integers where the index represents the manhattan distance of a Puck and the value is
-		/// the spawn order value for use in PuckMover.OnSpawned().
+		/// A_OnLevelSpawned is broadcast at the end.
 		/// </summary>
-		public virtual List<int> SpawnLevel() {
+		public void SpawnLevel() {
 			Assert.IsFalse(HasLevelSpawned, "[PuckSimulation]: The level has already been spawned! Call ClearLevel() first before calling SpawnLevel() again.");
-			HasLevelSpawned = true;
-			// Track manhattan distances for each Puck
-			List<int> puckManDists = new();
-			foreach (var pos in CurrentLevel) {
-				PuckNode puck = new(pos.x, pos.y);
-				// TODO
-				//int manDist = pos.x + pos.y;
-				//int index = puckManDists.BinarySearch(manDist);
-				//if (index < 0) {
-				//	index = ~index; // insertion point
-				//	puckManDists.Insert(index, manDist);
-				//}
-				int manDist = pos.x + pos.y;
-				int index = puckManDists.BinarySearch(manDist);
-				if (index < 0) {
-					index = ~index; // insertion point
-					puckManDists.Insert(index, manDist);
-				}
-				StationaryPucks.Add(pos, puck);
+			if (CurrentLevel.Count == 0) {
+				Debug.LogWarning("[PuckSimulation]: SpawnLevel() was called but no level has been generated, possibly due to level generation failure.");
+				return;
 			}
-			return puckManDists;
+			HasLevelSpawned = true;
+			PuckSpawnOrderList.Clear();
+			SpawnLevel_Implementation();
+			A_OnLevelSpawned?.Invoke();
 		}
 
 		/// <summary>
-		/// Clears all spawned Pucks. Does not reset the generated level layout.
+		/// Fills the internal StationaryPucks memory with PuckNodes based on the current generated level layout.<br/>
+		/// Ensure you called ClearLevel() before already.<br/>
+		/// This function does not broadcast A_OnLevelSpawned.
 		/// </summary>
-		public virtual void ClearLevel() {
-			Assert.IsTrue(HasLevelSpawned, "[PuckSimulation]: The level is already clear. Please call SpawnLevel() first.");
+		protected virtual void SpawnLevel_Implementation() {
+			// Track manhattan distances for each Puck
+			foreach (var pos in CurrentLevel) {
+				PuckNode puck = new(pos.x, pos.y);
+				int manDist = pos.x + pos.y;
+				int index = PuckSpawnOrderList.BinarySearch(manDist);
+				if (index < 0) {
+					index = ~index; // insertion point
+					PuckSpawnOrderList.Insert(index, manDist);
+				}
+				StationaryPucks.Add(pos, puck);
+			}
+		}
+
+		/// <summary>
+		/// Clears all spawned Pucks. Does not reset the generated level layout.<br/>
+		/// A_OnLevelCleared is broadcast at the end.
+		/// </summary>
+		public void ClearLevel() {
+			ClearLevel_Implementation();
+			A_OnLevelCleared?.Invoke();
+		}
+
+		/// <summary>
+		/// Clears all spawned Pucks. Does not reset the generated level layout.<br/>
+		/// This function does not broadcast A_OnLevelCleared at the end.
+		/// </summary>
+		protected virtual void ClearLevel_Implementation() {
 			HasLevelSpawned = false;
 			HasLevelStarted = false;
 			StepCount = 0;
@@ -197,7 +280,9 @@ namespace Pucks.Level {
 		}
 
 		/// <summary>
-		/// Convenience method to re-spawn the level. Internally just calls ClearLevel() and SpawnLevel().
+		/// Convenience method to re-spawn the level. Internally just calls ClearLevel() and SpawnLevel().<br/>
+		/// Returns a list of integers where the index represents the manhattan distance of a Puck and the value is
+		/// the spawn order value for use in PuckMover.OnSpawned().
 		/// </summary>
 		public void RespawnLevel() {
 			if (HasLevelSpawned)
@@ -222,8 +307,7 @@ namespace Pucks.Level {
 		public virtual void PushPuck(Vector2Int point, Vector2Int direction) {
 			Assert.IsTrue(HasLevelSpawned, "[PuckSimulation]: PushPuck() was called when the level has not yet been spawned. Call SpawnLevel() first.");
 			Assert.IsFalse(HasLevelStarted, "[PuckSimulation]: PushPuck() was called when the level has already been started.");
-			HasLevelStarted = true;
-			TransferPuckFromStationaryToMoving(point).Direction = direction;
+			PushPuck_Implementation(point, direction);
 			Step();
 
 			//{
@@ -233,11 +317,23 @@ namespace Pucks.Level {
 			//}
 		}
 
+		protected virtual void PushPuck_Implementation(Vector2Int point, Vector2Int direction) {
+			HasLevelStarted = true;
+			TransferPuckFromStationaryToMoving(point).Direction = direction;
+		}
+
 		/// <summary>
 		/// Calls PushPuck() but with the solution position/direction.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void PushSolutionPuck() => PushPuck(SolutionPosition, SolutionDirection);
+
+		/// <summary>
+		/// Calls PushPuck() but with the solution position/direction, but instead of calling Step() at the end
+		/// it calls Step_Implentation() (which does not broadcast A_OnLevelStepped).
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void PushSolutionPuck_NoNotify() => PushPuck_Implementation(SolutionPosition, SolutionDirection);
 
 		/// <summary>
 		/// Run a full simulation of the generated level.
@@ -249,14 +345,16 @@ namespace Pucks.Level {
 			// TODO: create ability to duplicate a PuckSimulation so that we can run the simulation on that one instead
 			if (HasLevelSpawned) {
 				Debug.LogWarning("[PuckSimulation]: TestGeneratedLevel() was called when the level is currently spawned in. The level will be cleared.");
-				ClearLevel();
+				ClearLevel_Implementation();
 			}
-			SpawnLevel();
-			PushSolutionPuck();
+			SpawnLevel_Implementation();
+			PushSolutionPuck_NoNotify();
 			// Brute force solution validation by stepping it until completion
-			while (NumMovingPucks > 0 || NumStationaryPucks > 0)
-				Step();
-			return NumStationaryPucks == 0;
+			while (NumMovingPucks > 0 && NumStationaryPucks > 0)
+				Step_Implementation();
+			bool success = NumStationaryPucks == 0;
+			ClearLevel_Implementation();
+			return success;
 		}
 
 		public PuckNode GetPuckAt(Vector3 position, float puckSize) {

@@ -33,6 +33,7 @@ namespace Pucks.Utilities {
 		/// Convenient method to add a puck to a &lt;position, puck&gt; dictionary.
 		/// </summary>
 		/// <param name="dict"></param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void Add(this Dictionary<Vector2Int, PuckNode> dict, PuckNode puck) {
 			dict.Add(puck.GridPoint, puck);
 		}

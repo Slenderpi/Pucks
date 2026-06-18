@@ -79,45 +79,6 @@ public class PuckMoverPool : MonoBehaviour {
 			Pool[--PoolPointer].gameObject.SetActive(false);
 	}
 
-	///// <summary>
-	///// Spawns a PuckMover and binds it to the given PuckNode.<br/>
-	///// <br/>
-	///// If no 
-	///// </summary>
-	///// <param name="p"></param>
-	//public void BindPuckToMover(PuckNode p, Vector3 position, Quaternion rotation) {
-	//	if (PoolPointer >= Count) {
-	//		SpawnPooledPuckMovers(_capacityGrowth);
-	//	}
-	//	PuckMover pm = Pool[PoolPointer++];
-	//	pm.transform.SetPositionAndRotation(position, rotation);
-	//	pm.gameObject.SetActive(true);
-	//	//pm.OnSpawned(puckManDists.BinarySearch(pos.x + pos.y));
-	//	pm.OnSpawned(0);
-	//	BoundPuckMovers.Add(p, pm);
-	//}
-
-	///// <summary>
-	///// Destroys unused PuckMovers until the Pool size is at minimum Count + _capacityGrowth.
-	///// </summary>
-	//public void ShrinkPool() {
-	//	int shrunkenSize = Count + _capacityGrowth;
-	//	if (Capacity > shrunkenSize)
-	//		DestroyPuckMovers(Capacity - shrunkenSize);
-	//	else
-	//		Debug.LogWarning("[PuckMoverPool]: ShrinkPool() was called but the Pool is already small enough.");
-	//}
-
-	///// <summary>
-	///// Clears all currently bound PuckMovers.
-	///// </summary>
-	//public void ClearBoundPuckMovers() {
-	//	PoolPointer = 0;
-	//	foreach (var (_, pm) in BoundPuckMovers)
-	//		pm.gameObject.SetActive(false);
-	//	BoundPuckMovers.Clear();
-	//}
-
 	/// <summary>
 	/// Completely destroy the current pool of PuckMovers.<br/>
 	/// To only return PuckMovers back to the pool, call Clear().

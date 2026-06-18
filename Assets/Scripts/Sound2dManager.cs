@@ -1,4 +1,5 @@
 using FMODUnity;
+using Pucks;
 using UnityEngine;
 
 public class Sound2dManager : MonoBehaviour {
@@ -9,7 +10,7 @@ public class Sound2dManager : MonoBehaviour {
 
 
 	private void Awake() {
-		LevelManager.A_OnLevelStepped += OnLevelStepped;
+		LevelManager.A_OnPuckSimulatorChanged += BindToPuckSimulator;
 
 		RuntimeManager.LoadBank("Master");
 		RuntimeManager.LoadBank("SoundEffects");
@@ -18,7 +19,11 @@ public class Sound2dManager : MonoBehaviour {
 	}
 
 	private void OnDestroy() {
-		LevelManager.A_OnLevelStepped -= OnLevelStepped;
+		LevelManager.A_OnPuckSimulatorChanged -= BindToPuckSimulator;
+	}
+
+	void BindToPuckSimulator(EPuckType puckType) {
+		LevelManager.Singleton.PuckSimulator.A_OnLevelStepped += OnLevelStepped;
 	}
 
 	void OnLevelStepped(int numCollisions) {

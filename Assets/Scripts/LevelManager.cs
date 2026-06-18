@@ -13,27 +13,32 @@ using UnityEngine.InputSystem;
 
 public class LevelManager : MonoBehaviour {
 
+	///// <summary>
+	///// Broadcasted after every StepLevel() call.<br/>
+	///// int: numCollisions, the number of moving->stationary collisions this step
+	///// </summary>
+	//public static Action<int> A_OnLevelStepped;
+	///// <summary>
+	///// Broadcasted after GenerateLevel() has finished.<br/>
+	///// int: difficulty
+	///// </summary>
+	//public static Action<int> A_OnLevelSpawned;
+	///// <summary>
+	///// Broadcasted if GenerateLevel() fails to generate a level.<br/>
+	///// int: difficulty<br/>
+	///// int: numGenProcessFails<br/>
+	///// int: numUnsovlableFails
+	///// </summary>
+	//public static Action<int, int, int> A_OnLevelGenFailed;
 	/// <summary>
-	/// Broadcasted after every StepLevel() call.<br/>
-	/// int: numCollisions, the number of moving->stationary collisions this step
+	/// Broadcast when the current PuckSimulator changes.<br/>
+	/// EPuckType: the EPuckType enum specified for the change.
 	/// </summary>
-	public static Action<int> A_OnLevelStepped;
-	/// <summary>
-	/// Broadcasted after GenerateLevel() has finished.<br/>
-	/// int: difficulty
-	/// </summary>
-	public static Action<int> A_OnLevelSpawned;
-	/// <summary>
-	/// Broadcasted if GenerateLevel() fails to generate a level.<br/>
-	/// int: difficulty<br/>
-	/// int: numGenProcessFails<br/>
-	/// int: numUnsovlableFails
-	/// </summary>
-	public static Action<int, int, int> A_OnLevelGenFailed;
+	public static Action<EPuckType> A_OnPuckSimulatorChanged;
 
-	[Tooltip("The value should be set to something that is <= WidthCount * HeightCount.")]
-	[SerializeField]
-	int PUCK_MOVER_POOL_SIZE = 20 * 16;
+	//[Tooltip("The value should be set to something that is <= WidthCount * HeightCount.")]
+	//[SerializeField]
+	//int PUCK_MOVER_POOL_SIZE = 20 * 16;
 
 	public static LevelManager Singleton;
 
@@ -78,6 +83,9 @@ public class LevelManager : MonoBehaviour {
 	[SerializeField]
 	int _startingDifficulty = 0;
 
+	/// <summary>
+	/// Access the current PuckSimulator.
+	/// </summary>
 	public PuckSimulation PuckSimulator => _puckSimulator;
 
 	// TODO: replace
@@ -133,10 +141,7 @@ public class LevelManager : MonoBehaviour {
 			Singleton = this;
 			//DontDestroyOnLoad(gameObject);
 
-			_puckSimulator = new QuadPuckSimulation() {
-				HeightCount = HeightCount,
-				WidthCount = WidthCount
-			};
+			ChangePuckSimulator(EPuckType.Quad);
 			_positionOffset = new(WidthCount * PuckSize / -2f, HeightCount * PuckSize / -2f, 0);
 			//CreatePuckMoverPool();
 		} else if (Singleton != this) {
@@ -147,7 +152,7 @@ public class LevelManager : MonoBehaviour {
 	private void Start() {
 		BindDebugActions();
 		GameManager.DebugActions.Enable();
-			GenerateLevel(_startingDifficulty);
+		_puckSimulator.GenerateLevel(_startingDifficulty);
 	}
 
 	private void Update() {
@@ -181,6 +186,23 @@ public class LevelManager : MonoBehaviour {
 		}
 	}
 
+	public void ChangePuckSimulator(EPuckType puckType) {
+		_puckSimulator = puckType switch {
+			EPuckType.Quad => new QuadPuckSimulation() {
+				HeightCount = HeightCount,
+				WidthCount = WidthCount
+			},
+			_ => throw new ArgumentException("[LevelManager]: ChangePuckSimulator() called with invalid EPuckType value: {puckType}."),
+		};
+		_puckSimulator.A_OnLevelSpawned += OnLevelSpawned;
+		_puckSimulator.A_OnLevelCleared += ClearActivePuckMovers;
+		_puckSimulator.A_OnLevelGenerated += () => {
+			_puckSimulator.ClearLevel();
+			_puckSimulator.SpawnLevel();
+		};
+		A_OnPuckSimulatorChanged?.Invoke(puckType);
+	}
+
 	// TODO: replace
 	//public static PuckNode GetPuckAt(Vector3 position) {
 	//	Vector2Int point = Singleton.PositionToPoint(position);
@@ -191,58 +213,59 @@ public class LevelManager : MonoBehaviour {
 
 	public static PuckMover GetPuckMoverFromPuck(PuckNode puckNode) => Singleton._activePuckMovers[puckNode];
 
-	public void GenerateLevel(int difficulty) {
-		Assert.IsTrue(difficulty >= 0, $"[LevelManager]: GeneratedLevel() was given an invalid difficulty value of {difficulty}.");
-		//_difficulty = difficulty;
-		int MAX_TRIES = 100;
-		int numGenProcessFails = 0;
-		int numUnsovlableFails = 0;
-		// TODO: replace
-		do {
-			if (!_puckSimulator.GenerateLevel(difficulty)) {
-				numGenProcessFails++;
-				continue;
-			}
-			if (_puckSimulator.TestGeneratedLevel())
-				break;
-			numUnsovlableFails++;
-		} while (numGenProcessFails + numUnsovlableFails < MAX_TRIES);
-		//do {
-		//	if (!GenerateLevel_Implementation(difficulty)) {
-		//		numGenProcessFails++;
-		//		continue;
-		//	}
-		//	ResetLevel();
-		//	MoveStationaryPuck(_solutionPosition, _solutionDirection);
-		//	while (_movingPucks.Count > 0) // Brute force solution validation by stepping it until completion
-		//		StepLevel_Implementation();
-		//	if (_stationaryPucks.Count == 0)
-		//		break;
-		//	numUnsovlableFails++;
-		//} while (numGenProcessFails + numUnsovlableFails < MAX_TRIES);
-		if (numGenProcessFails + numUnsovlableFails > 1) {
-			Debug.LogWarning($"[LevelManager]: Level generation failed {numGenProcessFails + numUnsovlableFails} (max {MAX_TRIES}) times for difficulty {difficulty}. Of them, {numGenProcessFails} were generation issues, and {numUnsovlableFails} were from impossible puzzles.");
-			if (numGenProcessFails + numUnsovlableFails == MAX_TRIES) {
-				//ClearLevel();
-				A_OnLevelGenFailed?.Invoke(difficulty, numGenProcessFails, numUnsovlableFails);
-				return;
-			}
-		}
-		RespawnLevel();
-		A_OnLevelSpawned?.Invoke(difficulty);
-	}
+	//public void GenerateLevel(int difficulty) {
+	//	Assert.IsTrue(difficulty >= 0, $"[LevelManager]: GeneratedLevel() was given an invalid difficulty value of {difficulty}.");
+	//	//_difficulty = difficulty;
+	//	int MAX_TRIES = 100;
+	//	int numGenProcessFails = 0;
+	//	int numUnsovlableFails = 0;
+	//	// TODO: replace
+	//	do {
+	//		if (!_puckSimulator.GenerateLevel(difficulty)) {
+	//			numGenProcessFails++;
+	//			continue;
+	//		}
+	//		if (_puckSimulator.TestGeneratedLevel())
+	//			break;
+	//		numUnsovlableFails++;
+	//	} while (numGenProcessFails + numUnsovlableFails < MAX_TRIES);
+	//	//do {
+	//	//	if (!GenerateLevel_Implementation(difficulty)) {
+	//	//		numGenProcessFails++;
+	//	//		continue;
+	//	//	}
+	//	//	ResetLevel();
+	//	//	MoveStationaryPuck(_solutionPosition, _solutionDirection);
+	//	//	while (_movingPucks.Count > 0) // Brute force solution validation by stepping it until completion
+	//	//		StepLevel_Implementation();
+	//	//	if (_stationaryPucks.Count == 0)
+	//	//		break;
+	//	//	numUnsovlableFails++;
+	//	//} while (numGenProcessFails + numUnsovlableFails < MAX_TRIES);
+	//	if (numGenProcessFails + numUnsovlableFails > 1) {
+	//		Debug.LogWarning($"[LevelManager]: Level generation failed {numGenProcessFails + numUnsovlableFails} (max {MAX_TRIES}) times for difficulty {difficulty}. Of them, {numGenProcessFails} were generation issues, and {numUnsovlableFails} were from impossible puzzles.");
+	//		if (numGenProcessFails + numUnsovlableFails == MAX_TRIES) {
+	//			//ClearLevel();
+	//			A_OnLevelGenFailed?.Invoke(difficulty, numGenProcessFails, numUnsovlableFails);
+	//			return;
+	//		}
+	//	}
+	//	RespawnLevel();
+	//	A_OnLevelSpawned?.Invoke(difficulty);
+	//}
 
-	public void SpawnLevel() {
-		List<int> puckOrders = _puckSimulator.SpawnLevel();
-		// Bind PuckMovers to PuckNodes
-		foreach (var (pos, pn) in _puckSimulator.GetStationaryPucks()) {
-			PuckMover pm = PuckMoverPool.SpawnPuckMover();
-			pm.transform.position = _positionOffset + _puckSimulator.PointToPosition(pos, PuckSize);
-			pm.gameObject.SetActive(true);
-			pm.OnSpawned(puckOrders.BinarySearch(pos.x + pos.y));
-			_activePuckMovers.Add(pn, pm);
-		}
-	}
+	//public void SpawnLevelAndBindPuckMovers() {
+	//	ClearActivePuckMovers();
+	//	_puckSimulator.SpawnLevel();
+	//	// Bind PuckMovers to PuckNodes
+	//	foreach (var (pos, pn) in _puckSimulator.GetStationaryPucks()) {
+	//		PuckMover pm = PuckMoverPool.SpawnPuckMover();
+	//		pm.transform.position = _positionOffset + _puckSimulator.PointToPosition(pos, PuckSize);
+	//		pm.gameObject.SetActive(true);
+	//		pm.OnSpawned(_puckSimulator.PuckSpawnOrderList.BinarySearch(pos.x + pos.y));
+	//		_activePuckMovers.Add(pn, pm);
+	//	}
+	//}
 
 	/// <summary>
 	/// Fills availableSpots with 
@@ -512,17 +535,17 @@ public class LevelManager : MonoBehaviour {
 	//	return true;
 	//}
 
-	public void StepSimulator() {
-		A_OnLevelStepped?.Invoke(_puckSimulator.Step());
-		// TODO: replace
-		//int numCollisions = StepLevel_Implementation();
-		//{
-		//	StringBuilder str = new("[LevelManager]: STEP |");
-		//	str.Append(GetLevelString());
-		//	Debug.Log(str.ToString());
-		//}
-		//A_OnLevelStepped?.Invoke(numCollisions);
-	}
+	//public void StepSimulator() {
+	//	A_OnLevelStepped?.Invoke(_puckSimulator.Step());
+	//	// TODO: replace
+	//	//int numCollisions = StepLevel_Implementation();
+	//	//{
+	//	//	StringBuilder str = new("[LevelManager]: STEP |");
+	//	//	str.Append(GetLevelString());
+	//	//	Debug.Log(str.ToString());
+	//	//}
+	//	//A_OnLevelStepped?.Invoke(numCollisions);
+	//}
 
 	// TODO: replace
 	//int StepLevel_Implementation() {
@@ -553,32 +576,36 @@ public class LevelManager : MonoBehaviour {
 	//	return numCollisions;
 	//}
 
-	public void BindPuckMoversToSpawnedLevel() {
+	void OnLevelSpawned() {
+		_timeSinceLastStep = 0f;
+		BindPuckMoversToSpawnedLevel();
+	}
+
+	void BindPuckMoversToSpawnedLevel() {
 		Assert.IsTrue(_puckSimulator.HasLevelSpawned, "[LevelManager]: Cannot bind PuckMovers because the level has not been spawned yet.");
 		Assert.IsFalse(_puckSimulator.HasLevelStarted, "[LevelManager]: Cannot bind PuckMovers when the level has already started. Bind before starting the level.");
-		// Bind PuckMovers
+		// Bind PuckMovers to PuckNodes
 		foreach (var (pos, pn) in _puckSimulator.GetStationaryPucks()) {
 			PuckMover pm = PuckMoverPool.SpawnPuckMover();
 			pm.transform.position = _positionOffset + _puckSimulator.PointToPosition(pos, PuckSize);
 			pm.gameObject.SetActive(true);
-			//pm.OnSpawned(puckManDists.BinarySearch(pos.x + pos.y));
-			pm.OnSpawned(0);
+			pm.OnSpawned(_puckSimulator.PuckSpawnOrderList.BinarySearch(pos.x + pos.y));
 			_activePuckMovers.Add(pn, pm);
 		}
 	}
 
-	public void ClearActivePuckMovers() {
+	void ClearActivePuckMovers() {
 		_activePuckMovers.Clear();
 		PuckMoverPool.Clear();
 	}
 
-	public void RespawnLevel() {
-		// TODO: complete
-		_timeSinceLastStep = 0f;
-		_puckSimulator.RespawnLevel();
-		ClearActivePuckMovers();
-		BindPuckMoversToSpawnedLevel();
-	}
+	//public void RespawnLevel() {
+	//	// TODO: complete
+	//	_timeSinceLastStep = 0f;
+	//	_puckSimulator.RespawnLevel();
+	//	BindPuckMoversToSpawnedLevel();
+	//}
+
 	// TODO: replace
 	//public void ResetLevel() {
 	//	_hasLevelStarted = false;
@@ -853,32 +880,37 @@ public class LevelManager : MonoBehaviour {
 		var da = GameManager.DebugActions;
 		da.ResetLevel.started += OnResetLevelActionStarted;
 		da.StepPucks.started += OnStepPucksActionStarted;
-		da.GenerateFilledLevel.started += _ => _puckSimulator.GenerateFilledLevel();
-		da.GenerateLevel0.started += _ => GenerateLevel(0);
-		da.GenerateLevel1.started += _ => GenerateLevel(1);
-		da.GenerateLevel2.started += _ => GenerateLevel(2);
-		da.GenerateLevel3.started += _ => GenerateLevel(3);
-		da.GenerateLevel4.started += _ => GenerateLevel(4);
-		da.GenerateLevel5.started += _ => GenerateLevel(5);
-		da.GenerateLevel6.started += _ => GenerateLevel(6);
-		da.GenerateLevel7.started += _ => GenerateLevel(7);
-		da.GenerateLevel8.started += _ => GenerateLevel(8);
-		da.GenerateLevel9.started += _ => GenerateLevel(9);
-		da.GenerateEasierLevel.started += _ => GenerateLevel(Math.Max(0, _puckSimulator.CurrentDifficulty - 1));
-		da.GenerateHarderLevel.started += _ => GenerateLevel(_puckSimulator.CurrentDifficulty + 1);
-		da.RegenerateCurrent.started += _ => GenerateLevel(_puckSimulator.CurrentDifficulty);
+		da.GenerateFilledLevel.started += _ => _puckSimulator.GenerateLevel(-1);
+		da.GenerateLevel0.started += _ => _puckSimulator.GenerateLevel(0);
+		da.GenerateLevel1.started += _ => _puckSimulator.GenerateLevel(1);
+		da.GenerateLevel2.started += _ => _puckSimulator.GenerateLevel(2);
+		da.GenerateLevel3.started += _ => _puckSimulator.GenerateLevel(3);
+		da.GenerateLevel4.started += _ => _puckSimulator.GenerateLevel(4);
+		da.GenerateLevel5.started += _ => _puckSimulator.GenerateLevel(5);
+		da.GenerateLevel6.started += _ => _puckSimulator.GenerateLevel(6);
+		da.GenerateLevel7.started += _ => _puckSimulator.GenerateLevel(7);
+		da.GenerateLevel8.started += _ => _puckSimulator.GenerateLevel(8);
+		da.GenerateLevel9.started += _ => _puckSimulator.GenerateLevel(9);
+		da.GenerateEasierLevel.started += _ => _puckSimulator.GeneratePrevLevel();
+		da.GenerateHarderLevel.started += _ => _puckSimulator.GenerateNextLevel();
+		da.RegenerateCurrent.started += _ => _puckSimulator.RegenerateLevel();
 	}
 
 	private void OnResetLevelActionStarted(InputAction.CallbackContext context) {
-		RespawnLevel();
+		//RespawnLevel();
+		_puckSimulator.RespawnLevel();
 	}
 
 	private void OnStepPucksActionStarted(InputAction.CallbackContext context) {
 		if (!_puckSimulator.HasLevelStarted) {
 			//TestSolution();
-			_puckSimulator.PushSolutionPuck();
+			if (_puckSimulator.HasLevelSpawned)
+				_puckSimulator.PushSolutionPuck();
+			else
+				Debug.LogWarning("[LevelManager]: Cannot push solution Puck because no level is currently spawned.");
 		} else {
-			StepSimulator();
+			//StepSimulator();
+			_puckSimulator.Step();
 		}
 	}
 

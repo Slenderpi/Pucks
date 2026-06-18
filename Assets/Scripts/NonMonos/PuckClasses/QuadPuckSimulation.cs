@@ -2,6 +2,7 @@ using Slenderpi.Utilities;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Assertions;
 
 namespace Pucks.Level.Quad {
 	public class QuadPuckSimulation : PuckSimulation {
@@ -22,7 +23,9 @@ namespace Pucks.Level.Quad {
 		public static Vector2Int LeftDirection => new(0, -1);
 		public static Vector2Int RightDirection => new(0, 1);
 
-		public override void GenerateFilledLevel() {
+
+
+		void GenerateFilledLevel() {
 			Difficulty = -1;
 			for (int r = 0; r < HeightCount; r++)
 				for (int c = 0; c < WidthCount; c++)
@@ -31,9 +34,12 @@ namespace Pucks.Level.Quad {
 			SolutionDirection = new(0, 1);
 		}
 
-		public override bool GenerateLevel(int difficulty) {
-			CurrentLevel.Clear();
-
+		protected override bool GenerateLevel_Implementation() {
+			Assert.IsTrue(Difficulty >= -1, $"[QuadPuckSimulation]: GenerateLevel() was given an invalid difficulty value of {Difficulty}.");
+			if (Difficulty == -1) {
+				GenerateFilledLevel();
+				return true;
+			}
 			Dictionary<Vector2Int, EPuckSpotState> chosenPositions = new();
 			Vector2Int lastPoint = new(UnityEngine.Random.Range(2, HeightCount - 3), UnityEngine.Random.Range(2, WidthCount - 3));
 			// If |, that means it desires an instigator of ^ or v, and that its children to hit are < and >. That is, we create <|> or ^-v
@@ -44,7 +50,7 @@ namespace Pucks.Level.Quad {
 			//Debug.Log($"[LevelManager]: GENERATE BEGIN | lastPoint: {lastPoint} | lastSplitDir: {PuckUtil.PuckMovementToChar(lastSplitDir)}");
 
 			chosenPositions.Add(lastPoint, lastSplitDir);
-			for (int i = difficulty; i > 0; i--) {
+			for (int i = Difficulty; i > 0; i--) {
 				Vector2Int sibling;
 				EPuckSpotState siblingInputHitDir;
 				Vector2Int parent;
@@ -171,7 +177,7 @@ namespace Pucks.Level.Quad {
 						SolutionDirection = LeftDirection;
 					}
 					if (chosenPositions.ContainsKey(SolutionPosition)) {
-						Debug.LogWarning("[LevelManager]: The final Puck does not have space to be given an answer Puck.");
+						Debug.LogWarning("[QuadPuckSimulation]: The final Puck does not have space to be given an answer Puck.");
 						return false;
 					}
 				}
@@ -195,7 +201,7 @@ namespace Pucks.Level.Quad {
 						SolutionDirection = UpDirection;
 					}
 					if (chosenPositions.ContainsKey(SolutionPosition)) {
-						Debug.LogWarning("[LevelManager]: The final Puck does not have space to be given an answer Puck.");
+						Debug.LogWarning("[QuadPuckSimulation]: The final Puck does not have space to be given an answer Puck.");
 						return false;
 					}
 				}
@@ -211,7 +217,6 @@ namespace Pucks.Level.Quad {
 			foreach (var (pos, dir) in chosenPositions)
 				if (dir != EPuckSpotState.Claimed)
 					CurrentLevel.Add(pos);
-			Difficulty = difficulty;
 			return true;
 		}
 
