@@ -33,12 +33,16 @@ public class PlayerSliderControl : MonoBehaviour {
 	// The below code provides helpful visuals during mouse dragging
 	// To see these visuals in-game, make sure the "Gizmos" button in the top right of the Game window is toggled on
 	private void Update() {
+		//if (LevelManager.Singleton.PuckSimulator.HasLevelStarted)
+		//	return;
 		if (_isDragging) {
+			// TODO: replace
 			Vector3 mpos = GetMouseWorldPosition();
 			Vector3 dragVector = mpos - _mouseSelectStart;
 			if (SuccessfullySelectedPuck()) {
 				Vector3 puckPos = LevelManager.Singleton.PointToPosition(_selectedPuck.GridPoint);
-				Vector3 alignedDragVector = (Mathf.Abs(dragVector.x) > Mathf.Abs(dragVector.y) ? new Vector3(Mathf.Sign(dragVector.x), 0, 0) : new Vector3(0, Mathf.Sign(dragVector.y), 0));
+				Vector2Int dragVectAsDir = LevelManager.Singleton.PuckSimulator.DragVectorToDirection(dragVector);
+				Vector3 alignedDragVector = new(dragVectAsDir.y, -dragVectAsDir.x, 0);
 				_dragLine.SetPosition(1, alignedDragVector * 5000 + _dragLine.GetPosition(0));
 				if (IsDragDistBigEnough(dragVector)) {
 					if (!_dragLine.enabled)
@@ -66,7 +70,8 @@ public class PlayerSliderControl : MonoBehaviour {
 				);
 			}
 		} else {
-			PuckNode p = LevelManager.GetPuckAt(GetMouseWorldPosition());
+			// TODO: replace
+			PuckNode p = LevelManager.Singleton.GetPuckAt(GetMouseWorldPosition());
 			if (p == null) {
 				if (_hoveredPuckMover != null) {
 					_hoveredPuckMover.OnHoverEnd();
@@ -91,17 +96,25 @@ public class PlayerSliderControl : MonoBehaviour {
 	}
 
 	private void OnSelectSliderStarted(InputAction.CallbackContext _) {
+		if (LevelManager.Singleton.PuckSimulator.HasLevelStarted)
+			return;
 		_isDragging = true;
 		_mouseSelectStart = GetMouseWorldPosition();
-		_selectedPuck = LevelManager.GetPuckAt(_mouseSelectStart);
+		// TODO: replace
+		_selectedPuck = LevelManager.Singleton.GetPuckAt(_mouseSelectStart);
+		//_selectedPuck = LevelManager.GetPuckAt(_mouseSelectStart);
 		if (SuccessfullySelectedPuck()) {
 			_hoveredPuckMover = LevelManager.GetPuckMoverFromPuck(_selectedPuck);
 			_hoveredPuckMover.OnSelectBegin();
+			// TODO: replace
 			_dragLine.SetPosition(0, LevelManager.Singleton.PointToPosition(_selectedPuck.GridPoint));
+			//_dragLine.SetPosition(0, LevelManager.Singleton.PointToPosition(_selectedPuck.GridPoint));
 		}
 	}
 
 	private void OnSelectSliderCanceled(InputAction.CallbackContext _) {
+		if (LevelManager.Singleton.PuckSimulator.HasLevelStarted)
+			return;
 		_isDragging = false;
 		_dragLine.enabled = false;
 		if (_hoveredPuckMover != null) {
@@ -111,7 +124,12 @@ public class PlayerSliderControl : MonoBehaviour {
 		Vector3 dragVector = GetMouseWorldPosition() - _mouseSelectStart;
 		if (!SuccessfullySelectedPuck() || !IsDragDistBigEnough(dragVector))
 			return;
-		LevelManager.StartLevelWithChoice(_selectedPuck.GridPoint, GetMovementDirection(dragVector));
+		// TODO: replace
+		LevelManager.Singleton.PuckSimulator.PushPuck(
+			_selectedPuck.GridPoint,
+			LevelManager.Singleton.PuckSimulator.DragVectorToDirection(dragVector)
+		);
+		//LevelManager.StartLevelWithChoice(_selectedPuck.GridPoint, GetMovementDirection(dragVector));
 		_selectedPuck = null;
 	}
 
@@ -125,10 +143,5 @@ public class PlayerSliderControl : MonoBehaviour {
 	bool SuccessfullySelectedPuck() => _selectedPuck != null;
 
 	bool IsDragDistBigEnough(Vector3 dragVector) => Vector3.SqrMagnitude(dragVector) >= Util.pow2(_dragDeadzone);
-
-	EPuckMovementDirection GetMovementDirection(Vector3 dragVector) =>
-		Mathf.Abs(dragVector.x) > Mathf.Abs(dragVector.y)
-		? (dragVector.x > 0 ? EPuckMovementDirection.Right : EPuckMovementDirection.Left)
-		: (dragVector.y > 0 ? EPuckMovementDirection.Up : EPuckMovementDirection.Down);
 
 }

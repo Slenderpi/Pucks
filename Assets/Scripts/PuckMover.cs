@@ -26,7 +26,7 @@ public class PuckMover : MonoBehaviour {
     /// Hover means when the mouse is hovered over this Puck.
     /// </summary>
     public void OnHoverBegin() {
-        StopCurrentAnimation();
+		StopCurrentAnimation();
 		_currentAnimation = StartCoroutine(HoverOrSelectAnimation(transform.localScale.x, 1.15f));
         _currState = EAnimState.HoverBegin;
 	}
@@ -35,7 +35,9 @@ public class PuckMover : MonoBehaviour {
 	/// Hover means when the mouse is hovered over this Puck.
 	/// </summary>
 	public void OnHoverEnd() {
-        StopCurrentAnimation();
+		if (!gameObject.activeSelf)
+			return;
+		StopCurrentAnimation();
 		_currentAnimation = StartCoroutine(HoverOrSelectAnimation(transform.localScale.x, 1));
         _currState = EAnimState.HoverEnd;
 	}
@@ -47,6 +49,8 @@ public class PuckMover : MonoBehaviour {
 	}
 
     public void OnSelectEnd() {
+		if (!gameObject.activeSelf)
+			return;
 		StopCurrentAnimation();
 		_currentAnimation = StartCoroutine(HoverOrSelectAnimation(transform.localScale.x, 1));
 		_currState = EAnimState.SelectEnd;

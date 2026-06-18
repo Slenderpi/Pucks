@@ -1,3 +1,4 @@
+using Pucks;
 using TMPro;
 using UnityEngine;
 
@@ -13,17 +14,20 @@ public class IngameCanvas : MonoBehaviour {
 
 
 	private void Awake() {
-		LevelManager.A_OnLevelSpawned += OnLevelSpawned;
-		LevelManager.A_OnLevelGenFailed += OnLevelGenerationFailed;
+		LevelManager.A_OnPuckSimulatorChanged += BindToPuckSimulator;
 	}
 
 	private void OnDestroy() {
-		LevelManager.A_OnLevelSpawned -= OnLevelSpawned;
-		LevelManager.A_OnLevelGenFailed -= OnLevelGenerationFailed;
+		LevelManager.A_OnPuckSimulatorChanged -= BindToPuckSimulator;
 	}
 
-	void OnLevelSpawned(int difficulty) {
-		SetDifficultyLabelText(difficulty);
+	void BindToPuckSimulator(EPuckType puckType) {
+		LevelManager.Singleton.PuckSimulator.A_OnLevelSpawned += OnLevelSpawned;
+		LevelManager.Singleton.PuckSimulator.A_OnLevelGenFailed += OnLevelGenerationFailed;
+	}
+
+	void OnLevelSpawned() {
+		SetDifficultyLabelText(LevelManager.Singleton.PuckSimulator.CurrentDifficulty);
 
 		_consecutiveFailures = 0;
 		_failedWarningLabel.gameObject.SetActive(false);
