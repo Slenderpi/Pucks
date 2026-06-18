@@ -74,7 +74,6 @@ public class LevelManager : MonoBehaviour {
 		if (!Singleton) {
 			Singleton = this;
 
-			ChangePuckSimulator(PuckType);
 			_positionOffset = new(WidthCount * PuckSize / -2f, HeightCount * PuckSize / -2f, 0);
 		} else if (Singleton != this) {
 			Destroy(gameObject);
@@ -82,6 +81,7 @@ public class LevelManager : MonoBehaviour {
 	}
 
 	private void Start() {
+		ChangePuckSimulator(PuckType);
 		BindDebugActions();
 		GameManager.DebugActions.Enable();
 		_puckSimulator.GenerateLevel(_startingDifficulty);

@@ -1,10 +1,10 @@
-using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Unity.Collections;
 using UnityEngine;
+using UnityEngine.Assertions;
 
 namespace Pucks.Level {
 	/// <summary>
@@ -36,6 +36,14 @@ namespace Pucks.Level {
 		/// int: numUnsovlableFails
 		/// </summary>
 		public Action<int, int, int> A_OnLevelGenFailed;
+		/// <summary>
+		/// Broadcast if the level results in the win state.
+		/// </summary>
+		public Action A_OnLevelWon;
+		/// <summary>
+		/// Broadcast if the level results in the loss state.
+		/// </summary>
+		public Action A_OnLevelLost;
 
 		/// <summary>
 		/// Number of columns in the level grid.
@@ -61,6 +69,11 @@ namespace Pucks.Level {
 		/// Levels are first generated via GenerateLevel(), then spawned in via SpawnLevel().
 		/// </summary>
 		public bool HasLevelSpawned { get; private set; }
+
+		/// <summary>
+		/// Determines if the level has reached either the won or lost state.
+		/// </summary>
+		public bool HasLevelEnded { get; private set; }
 
 		/// <summary>
 		/// The Difficulty of the current generated level.
@@ -147,6 +160,7 @@ namespace Pucks.Level {
 		/// </summary>
 		/// <param name="difficulty"></param>
 		public void GenerateLevel(int difficulty) {
+			ClearLevel();
 			Difficulty = difficulty;
 			int MAX_TRIES = 100;
 			int numGenProcessFails = 0;
@@ -199,6 +213,15 @@ namespace Pucks.Level {
 
 		public void Step() {
 			A_OnLevelStepped?.Invoke(Step_Implementation());
+			if (HasLevelEnded)
+				return;
+			if (IsInWinState()) {
+				HasLevelEnded = true;
+				A_OnLevelWon?.Invoke();
+			} else if (IsInLoseState()) {
+				HasLevelEnded = true;
+				A_OnLevelLost?.Invoke();
+			}
 		}
 
 		/// <summary>
@@ -299,6 +322,7 @@ namespace Pucks.Level {
 		protected virtual void ClearLevel_Implementation() {
 			HasLevelSpawned = false;
 			HasLevelStarted = false;
+			HasLevelEnded = false;
 			StepCount = 0;
 			StationaryPucks.Clear();
 			MovingPucks.Clear();

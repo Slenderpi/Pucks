@@ -8,6 +8,10 @@ public class IngameCanvas : MonoBehaviour {
     TMP_Text _difficultyLabel;
 	[SerializeField]
 	TMP_Text _failedWarningLabel;
+	[SerializeField]
+	GameObject _wonPanel;
+	[SerializeField]
+	GameObject _lostPanel;
 
 	int _consecutiveFailures = 0;
 
@@ -15,6 +19,9 @@ public class IngameCanvas : MonoBehaviour {
 
 	private void Awake() {
 		LevelManager.A_OnPuckSimulatorChanged += BindToPuckSimulator;
+		_failedWarningLabel.gameObject.SetActive(false);
+		_wonPanel.SetActive(false);
+		_lostPanel.SetActive(false);
 	}
 
 	private void OnDestroy() {
@@ -24,6 +31,8 @@ public class IngameCanvas : MonoBehaviour {
 	void BindToPuckSimulator(EPuckType puckType) {
 		LevelManager.Singleton.PuckSimulator.A_OnLevelSpawned += OnLevelSpawned;
 		LevelManager.Singleton.PuckSimulator.A_OnLevelGenFailed += OnLevelGenerationFailed;
+		LevelManager.Singleton.PuckSimulator.A_OnLevelWon += OnLevelWon;
+		LevelManager.Singleton.PuckSimulator.A_OnLevelLost += OnLevelLost;
 	}
 
 	void OnLevelSpawned() {
@@ -31,6 +40,8 @@ public class IngameCanvas : MonoBehaviour {
 
 		_consecutiveFailures = 0;
 		_failedWarningLabel.gameObject.SetActive(false);
+		_wonPanel.SetActive(false);
+		_lostPanel.SetActive(false);
 	}
 
 	void OnLevelGenerationFailed(int difficulty, int numGenProcessFails, int numUnsovlableFails) {
@@ -41,6 +52,14 @@ public class IngameCanvas : MonoBehaviour {
 			beginning += " x" + _consecutiveFailures;
 		_failedWarningLabel.SetText($"{beginning}\nPress G to regenerate.\nGeneration fails: {numGenProcessFails} | Solvability fails: {numUnsovlableFails}");
 		_failedWarningLabel.gameObject.SetActive(true);
+	}
+
+	void OnLevelWon() {
+		_wonPanel.SetActive(true);
+	}
+
+	void OnLevelLost() {
+		_lostPanel.SetActive(true);
 	}
 
 	void SetDifficultyLabelText(int difficulty) {

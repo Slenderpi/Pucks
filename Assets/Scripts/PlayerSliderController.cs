@@ -33,8 +33,8 @@ public class PlayerSliderControl : MonoBehaviour {
 	// The below code provides helpful visuals during mouse dragging
 	// To see these visuals in-game, make sure the "Gizmos" button in the top right of the Game window is toggled on
 	private void Update() {
-		//if (LevelManager.Singleton.PuckSimulator.HasLevelStarted)
-		//	return;
+		if (LevelManager.Singleton.PuckSimulator.HasLevelStarted)
+			return;
 		if (_isDragging) {
 			// TODO: replace
 			Vector3 mpos = GetMouseWorldPosition();
