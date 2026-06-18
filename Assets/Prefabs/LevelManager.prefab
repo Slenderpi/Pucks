@@ -45,11 +45,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 53de93b3bb22e2841a8020a2230ba380, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LevelManager
-  PUCK_MOVER_POOL_SIZE: 320
   PuckType: 1
   PuckMoverPool: {fileID: 707681841990716929}
-  _quadPuckPrefab: {fileID: 3050537813321254843, guid: 6365be0f239768544ad47833f25d7029, type: 3}
-  _hexPuckPrefab: {fileID: 3050537813321254843, guid: 1c459e6071c703843b0ebb5d5c1b9feb, type: 3}
   WidthCount: 40
   HeightCount: 32
   PuckSize: 0.5
@@ -68,6 +65,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d10e3dd99835f8459e5436c092aadb7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PuckMoverPool
-  _startingCapacity: 100
+  _startingCapacity: 24
+  _shrinkAtPercent: 0.6
   _capacityGrowth: 10
+  _shrinkCheckDelay: 0.666
+  _shrinkCheckMemorySize: 32
   PuckMoverPrefab: {fileID: 3050537813321254843, guid: 6365be0f239768544ad47833f25d7029, type: 3}

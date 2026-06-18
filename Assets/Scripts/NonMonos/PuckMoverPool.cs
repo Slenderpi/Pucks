@@ -1,4 +1,6 @@
 using NUnit.Framework;
+using Slenderpi.Utilities.CircularArray;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,14 +9,30 @@ public class PuckMoverPool : MonoBehaviour {
 	[Header("Configuration")]
 
 	[Min(1)]
-	[Tooltip("On Awake(), this number of PuckMovers will get spawned in the internal pool.")]
+	[Tooltip("On Awake(), this number of PuckMovers will get spawned in the internal pool.\nNOTE: this value ALSO determines the minimum capacity.")]
 	[SerializeField]
-	int _startingCapacity = 100;
+	int _startingCapacity = 32;
+
+	[Min(0.1f)]
+	[SerializeField]
+	[Tooltip("If the average pool size becomes less than this percent of the current capacity, the capacity will be shrunken.")]
+	float _shrinkAtPercent = 0.6f;
 
 	[Min(1)]
 	[Tooltip("When the internal Pool is full and another PuckMover is requested, the Pool will grow by this rate.\nWhen ShrinkPool() is called, the Pool is shrunk to Count + _capacityGrowth.")]
 	[SerializeField]
 	int _capacityGrowth = 10;
+
+	[Min(0)]
+	[SerializeField]
+	[Tooltip("The amount of time (in seconds, realtime) between each shrink check. The Count is recorded to determine if the Pool can be shrunken to a smaller size.")]
+	float _shrinkCheckDelay = 1f;
+	WaitForSecondsRealtime _poolShrinkerWaiter;
+
+	[Min(1)]
+	[SerializeField]
+	[Tooltip("The number of records of last recorded counts that will be maintained. This should be considered in context with _countRecordDelay")]
+	int _shrinkCheckMemorySize = 64;
 
 	[Header("PuckMover prefabs")]
 
@@ -30,18 +48,57 @@ public class PuckMoverPool : MonoBehaviour {
 	/// </summary>
 	protected readonly List<PuckMover> Pool = new();
 	/// <summary>
-	/// Pointer within the Pool indicating the next available PuckMover that can be used.
+	/// Pointer within the Pool indicating the next available PuckMover that can be used.<br/>
+	/// Also indicivative of the number of currently active PuckMovers.
 	/// </summary>
 	protected int PoolPointer = 0;
+
+	/// <summary>
+	/// A record of the last PoolPointer sizes.
+	/// </summary>
+	protected CircularArray<int> RecordedCounts;
+	/// <summary>
+	/// A running sum of the last PoolPointer sizes.
+	/// </summary>
+	protected int RunSum;
+	/// <summary>
+	/// Determines if the Capacity increased before the next ShrinkCheck.
+	/// </summary>
+	protected bool CapcityIncreasedThisShrinkCheck = false;
 
 
 
 	private void Awake() {
+		Assert.IsTrue(_shrinkAtPercent < 1, "$[PuckMoverPool]: The ShrinkAtPercent value of {_shrinkAtPercent} cannot be more than 1.");
+		RecordedCounts = new(_shrinkCheckMemorySize);
+		_poolShrinkerWaiter = new(_shrinkCheckDelay);
 		InstantiatePuckMovers(_startingCapacity);
+	}
+
+	private void Start() {
+		StartCoroutine(PoolShrinker());
 	}
 
 	private void OnDestroy() {
 		Destroy();
+	}
+
+	IEnumerator PoolShrinker() {
+		while (true) {
+			yield return _poolShrinkerWaiter;
+			if (CapcityIncreasedThisShrinkCheck) {
+				CapcityIncreasedThisShrinkCheck = false;
+				RecordedCounts.SetAll(Capacity);
+				RunSum = Capacity * _shrinkCheckMemorySize;
+			} else {
+				RunSum = RunSum - RecordedCounts.Peek() + PoolPointer;
+				float avg = (float)RunSum / _shrinkCheckMemorySize;
+				if (avg / Capacity < _shrinkAtPercent) {
+					ShrinkPool();
+				}
+				RecordedCounts.Add(PoolPointer);
+			}
+		}
 	}
 
 	/// <summary>
@@ -66,7 +123,7 @@ public class PuckMoverPool : MonoBehaviour {
 	/// </summary>
 	/// <returns></returns>
 	public PuckMover SpawnPuckMover() {
-		if (PoolPointer >= Capacity)
+		if (PoolPointer + _capacityGrowth >= Capacity)
 			InstantiatePuckMovers(_capacityGrowth);
 		return Pool[PoolPointer++];
 	}
@@ -85,12 +142,23 @@ public class PuckMoverPool : MonoBehaviour {
 	/// </summary>
 	public void Destroy() {
 		foreach (PuckMover pm in Pool)
-			Destroy(pm);
+			if (pm != null && pm.gameObject != null)
+				Destroy(pm.gameObject);
 		Pool.Clear();
 		PoolPointer = 0;
 	}
 
+	/// <summary>
+	/// Shrinks Capacity to PoolPointer + _capacityGrowth (with a minimum Capacity size of _startingCapacity).
+	/// </summary>
+	public void ShrinkPool() {
+		if (Capacity <= _startingCapacity)
+			return;
+		DestroyPuckMovers(Capacity - Mathf.Max(PoolPointer + _capacityGrowth, _startingCapacity));
+	}
+
 	void InstantiatePuckMovers(int num) {
+		CapcityIncreasedThisShrinkCheck = true;
 		for (int i = 0; i < num; i++) {
 			PuckMover pm = Instantiate(PuckMoverPrefab);
 			//PuckMover pm = Instantiate(PuckType switch {
@@ -106,7 +174,7 @@ public class PuckMoverPool : MonoBehaviour {
 	void DestroyPuckMovers(int num) {
 		for (int i = 0; i < num; i++) {
 			int end = Pool.Count - 1;
-			Destroy(Pool[end]);
+			Destroy(Pool[end].gameObject);
 			Pool.RemoveAt(end);
 		}
 	}

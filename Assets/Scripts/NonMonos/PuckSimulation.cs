@@ -365,10 +365,9 @@ namespace Pucks.Level {
 		/// <returns></returns>
 		public bool TestGeneratedLevel() {
 			// TODO: create ability to duplicate a PuckSimulation so that we can run the simulation on that one instead
-			if (HasLevelSpawned) {
-				Debug.LogWarning("[PuckSimulation]: TestGeneratedLevel() was called when the level is currently spawned in. The level will be cleared.");
+			Assert.IsFalse(HasLevelStarted, "[PuckSimulation]: TestGeneratedLevel() was called when the level already started, which should not occur.") ;
+			if (HasLevelSpawned)
 				ClearLevel_Implementation();
-			}
 			SpawnLevel_Implementation();
 			PushPuck_Implementation(SolutionPosition, SolutionDirection);
 			// Brute force solution validation by stepping it until completion
