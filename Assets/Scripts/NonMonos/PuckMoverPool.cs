@@ -83,6 +83,7 @@ public class PuckMoverPool : MonoBehaviour {
 	}
 
 	private void OnDestroy() {
+		LevelManager.A_OnPuckSimulatorChanged -= OnPuckSimulatorChanged;
 		Destroy();
 	}
 
