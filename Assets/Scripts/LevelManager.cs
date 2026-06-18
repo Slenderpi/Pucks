@@ -216,6 +216,7 @@ public class LevelManager : MonoBehaviour {
 		var da = GameManager.DebugActions;
 		da.ResetLevel.started += OnResetLevelActionStarted;
 		da.StepPucks.started += OnStepPucksActionStarted;
+		da.ToggleManualStepping.started += _ => _updateManually = !_updateManually;
 		da.GenerateFilledLevel.started += _ => _puckSimulator.GenerateLevel(-1);
 		da.GenerateLevel0.started += _ => _puckSimulator.GenerateLevel(0);
 		da.GenerateLevel1.started += _ => _puckSimulator.GenerateLevel(1);

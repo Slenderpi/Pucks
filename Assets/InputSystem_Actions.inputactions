@@ -25,6 +25,15 @@
                     "initialStateCheck": false
                 },
                 {
+                    "name": "ToggleManualStepping",
+                    "type": "Button",
+                    "id": "ee829e10-9385-43e6-a74d-3d5a4d9fe40d",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
                     "name": "GenerateFilledLevel",
                     "type": "Button",
                     "id": "ca3850ac-0912-4511-b307-ce5b7aaedcba",
@@ -435,6 +444,17 @@
                     "processors": "",
                     "groups": "",
                     "action": "RegenerateCurrent",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "8a99113c-f07f-4765-91c6-f18994fd6d3d",
+                    "path": "<Keyboard>/m",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ToggleManualStepping",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
