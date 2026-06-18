@@ -46,18 +46,40 @@ namespace Pucks.Level {
 		/// </summary>
 		public int HeightCount = 32;
 
+		/// <summary>
+		/// The current Step() iteration.
+		/// </summary>
 		public int StepCount { get; protected set; }
 
+		/// <summary>
+		/// Determines if a level has start moving Pucks.
+		/// </summary>
 		public bool HasLevelStarted { get; protected set; }
 
+		/// <summary>
+		/// Determines if a level has been spawned in.<br/>
+		/// Levels are first generated via GenerateLevel(), then spawned in via SpawnLevel().
+		/// </summary>
 		public bool HasLevelSpawned { get; private set; }
 
+		/// <summary>
+		/// The Difficulty of the current generated level.
+		/// </summary>
 		public int CurrentDifficulty => Difficulty;
 
+		/// <summary>
+		/// Number of moving Pucks.
+		/// </summary>
 		public int NumMovingPucks => MovingPucks.Count;
 
+		/// <summary>
+		/// Number of stationary Pucks.
+		/// </summary>
 		public int NumStationaryPucks => StationaryPucks.Count;
 
+		/// <summary>
+		/// Number of Pucks that are moving and have exited the level grid.
+		/// </summary>
 		public int NumExitedPuck => ExitedPucks.Count;
 
 		/// <summary>
@@ -87,6 +109,10 @@ namespace Pucks.Level {
 		public Vector2Int SolutionDirection { get; protected set; }
 		protected int Difficulty = 0;
 
+		/// <summary>
+		/// List of integers where the integer is the spawn order (for use by PuckMovers) and
+		/// the index is the manhattan distance of a PuckNode's GridPoint.
+		/// </summary>
 		public List<int> PuckSpawnOrderList { get; protected set; } = new();
 
 
@@ -126,7 +152,7 @@ namespace Pucks.Level {
 			int numGenProcessFails = 0;
 			int numUnsovlableFails = 0;
 			do {
-				CurrentLevel.Clear();
+				ClearGeneratedLevel();
 				if (!GenerateLevel_Implementation()) {
 					numGenProcessFails++;
 					continue;
@@ -138,7 +164,7 @@ namespace Pucks.Level {
 			if (numGenProcessFails + numUnsovlableFails > 0) {
 				Debug.LogWarning($"[LevelManager]: Level generation failed {numGenProcessFails + numUnsovlableFails} (max {MAX_TRIES}) times for difficulty {difficulty}. Of them, {numGenProcessFails} were generation issues, and {numUnsovlableFails} were from impossible puzzles.");
 				if (numGenProcessFails + numUnsovlableFails == MAX_TRIES) {
-					CurrentLevel.Clear();
+					ClearGeneratedLevel();
 					ClearLevel();
 					A_OnLevelGenFailed?.Invoke(difficulty, numGenProcessFails, numUnsovlableFails);
 					return;
@@ -306,7 +332,10 @@ namespace Pucks.Level {
 		/// <param name="direction"></param>
 		public virtual void PushPuck(Vector2Int point, Vector2Int direction) {
 			Assert.IsTrue(HasLevelSpawned, "[PuckSimulation]: PushPuck() was called when the level has not yet been spawned. Call SpawnLevel() first.");
-			Assert.IsFalse(HasLevelStarted, "[PuckSimulation]: PushPuck() was called when the level has already been started.");
+			if (HasLevelStarted) {
+				Debug.LogWarning("[PuckSimulation]: PushPuck() was called when the level has already been started. No more moves are allowed until a restart.");
+				return;
+			}
 			PushPuck_Implementation(point, direction);
 			Step();
 
@@ -329,13 +358,6 @@ namespace Pucks.Level {
 		public void PushSolutionPuck() => PushPuck(SolutionPosition, SolutionDirection);
 
 		/// <summary>
-		/// Calls PushPuck() but with the solution position/direction, but instead of calling Step() at the end
-		/// it calls Step_Implentation() (which does not broadcast A_OnLevelStepped).
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void PushSolutionPuck_NoNotify() => PushPuck_Implementation(SolutionPosition, SolutionDirection);
-
-		/// <summary>
 		/// Run a full simulation of the generated level.
 		/// </summary>
 		/// <param name="point"></param>
@@ -348,7 +370,7 @@ namespace Pucks.Level {
 				ClearLevel_Implementation();
 			}
 			SpawnLevel_Implementation();
-			PushSolutionPuck_NoNotify();
+			PushPuck_Implementation(SolutionPosition, SolutionDirection);
 			// Brute force solution validation by stepping it until completion
 			while (NumMovingPucks > 0 && NumStationaryPucks > 0)
 				Step_Implementation();
