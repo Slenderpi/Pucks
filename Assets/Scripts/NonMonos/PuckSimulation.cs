@@ -386,6 +386,15 @@ namespace Pucks.Level {
 				: null;
 		}
 
+		/// <summary>
+		/// For use by the PlayerSliderController to determine desired Puck direction given a dragVector
+		/// from mouse input.<br/>
+		/// By default, determines the closest cardinal direction to the drag vector.
+		/// </summary>
+		/// <param name="dragVector"></param>
+		/// <returns></returns>
+		public abstract Vector2Int DragVectorToDirection(Vector3 dragVector);
+
 		public Dictionary<Vector2Int, PuckNode> GetStationaryPucks() => StationaryPucks;
 
 		public List<PuckNode> GetMovingPucks() => MovingPucks;

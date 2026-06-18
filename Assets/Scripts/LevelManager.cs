@@ -135,14 +135,32 @@ public class LevelManager : MonoBehaviour {
 		A_OnPuckSimulatorChanged?.Invoke(puckType);
 	}
 
-	// TODO: replace
-	//public static PuckNode GetPuckAt(Vector3 position) {
-	//	Vector2Int point = Singleton.PositionToPoint(position);
-	//	return Singleton._stationaryPucks.ContainsKey(point)
-	//		? Singleton._stationaryPucks[point]
-	//		: null;
-	//}
+	/// <summary>
+	/// Get the PuckNode at a world position.
+	/// </summary>
+	/// <param name="position"></param>
+	/// <returns>null if there is no Puck there.</returns>
+	public PuckNode GetPuckAt(Vector3 position) => _puckSimulator.GetPuckAt(position - _positionOffset, PuckSize);
 
+	/// <summary>
+	/// Converts from GridPoint to world position.
+	/// </summary>
+	/// <param name="point"></param>
+	/// <returns></returns>
+	public Vector3 PointToPosition(Vector2Int point) => _puckSimulator.PointToPosition(point, PuckSize) + _positionOffset;
+
+	/// <summary>
+	/// Converts from world position to GridPoint.
+	/// </summary>
+	/// <param name="position"></param>
+	/// <returns></returns>
+	public Vector2Int PositionToPoint(Vector3 position) => _puckSimulator.PositionToPoint(position - _positionOffset, PuckSize);
+
+	/// <summary>
+	/// Get the PuckMover bound to a specific PuckNode.
+	/// </summary>
+	/// <param name="puckNode"></param>
+	/// <returns></returns>
 	public static PuckMover GetPuckMoverFromPuck(PuckNode puckNode) => Singleton._activePuckMovers[puckNode];
 
 	void OnLevelSpawned() {

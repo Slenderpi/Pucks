@@ -339,6 +339,11 @@ namespace Pucks.Level.Quad {
 			downRange = new(lastPoint.x + 1, lowestDown);
 		}
 
+		public override Vector2Int DragVectorToDirection(Vector3 dragVector) =>
+			Mathf.Abs(dragVector.x) > Mathf.Abs(dragVector.y)
+			? (dragVector.x > 0 ? new(0, 1) : new(0, -1))
+			: (dragVector.y > 0 ? new(-1, 0) : new(1, 0));
+
 		char PuckSpotStateToChar(EPuckSpotState state) => state switch {
 			EPuckSpotState.None => ' ',
 			EPuckSpotState.Up => '^',
