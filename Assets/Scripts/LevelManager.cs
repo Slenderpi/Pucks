@@ -74,7 +74,7 @@ public class LevelManager : MonoBehaviour {
 		if (!Singleton) {
 			Singleton = this;
 
-			ChangePuckSimulator(EPuckType.Quad);
+			ChangePuckSimulator(PuckType);
 			_positionOffset = new(WidthCount * PuckSize / -2f, HeightCount * PuckSize / -2f, 0);
 		} else if (Singleton != this) {
 			Destroy(gameObject);
@@ -102,12 +102,12 @@ public class LevelManager : MonoBehaviour {
 				//}
 			}
 			foreach (var (pn, pm) in _activePuckMovers) {
-				pm.transform.position = GetLerpedPosition(pn) + _positionOffset;
+				pm.transform.position = GetLerpedPosition(pn);
 			}
 			_timeSinceLastStep += Time.deltaTime;
 		} else {
 			foreach (var (pn, pm) in _activePuckMovers) {
-				pm.transform.position = _puckSimulator.PointToPosition(pn.GridPoint, PuckSize) + _positionOffset;
+				pm.transform.position = PointToPosition(pn.GridPoint);
 			}
 		}
 	}
@@ -121,6 +121,10 @@ public class LevelManager : MonoBehaviour {
 	public void ChangePuckSimulator(EPuckType puckType) {
 		_puckSimulator = puckType switch {
 			EPuckType.Quad => new QuadPuckSimulation() {
+				HeightCount = HeightCount,
+				WidthCount = WidthCount
+			},
+			EPuckType.Octa => new OctaPuckSimulation() {
 				HeightCount = HeightCount,
 				WidthCount = WidthCount
 			},
@@ -249,7 +253,7 @@ public class LevelManager : MonoBehaviour {
 		// Bind PuckMovers to PuckNodes
 		foreach (var (pos, pn) in _puckSimulator.GetStationaryPucks()) {
 			PuckMover pm = PuckMoverPool.SpawnPuckMover();
-			pm.transform.position = _positionOffset + _puckSimulator.PointToPosition(pos, PuckSize);
+			pm.transform.position = PointToPosition(pos);
 			pm.gameObject.SetActive(true);
 			pm.OnSpawned(_puckSimulator.PuckSpawnOrderList.BinarySearch(pos.x + pos.y));
 			_activePuckMovers.Add(pn, pm);
@@ -265,7 +269,7 @@ public class LevelManager : MonoBehaviour {
 		_puckSimulator.PointToPosition(p.PreviousGridPoint, PuckSize),
 		_puckSimulator.PointToPosition(p.GridPoint, PuckSize),
 		_timeSinceLastStep / StepUpdateDelay
-	);
+	) + _positionOffset;
 
 	void D_DrawLevelGridOutline(float duration=0f) {
 		float3 box = new(WidthCount * PuckSize, HeightCount * PuckSize, PuckSize);

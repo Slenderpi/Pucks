@@ -41,7 +41,8 @@ public class PlayerSliderControl : MonoBehaviour {
 			Vector3 dragVector = mpos - _mouseSelectStart;
 			if (SuccessfullySelectedPuck()) {
 				Vector3 puckPos = LevelManager.Singleton.PointToPosition(_selectedPuck.GridPoint);
-				Vector3 alignedDragVector = (Mathf.Abs(dragVector.x) > Mathf.Abs(dragVector.y) ? new Vector3(Mathf.Sign(dragVector.x), 0, 0) : new Vector3(0, Mathf.Sign(dragVector.y), 0));
+				Vector2Int dragVectAsDir = LevelManager.Singleton.PuckSimulator.DragVectorToDirection(dragVector);
+				Vector3 alignedDragVector = new(dragVectAsDir.y, -dragVectAsDir.x, 0);
 				_dragLine.SetPosition(1, alignedDragVector * 5000 + _dragLine.GetPosition(0));
 				if (IsDragDistBigEnough(dragVector)) {
 					if (!_dragLine.enabled)

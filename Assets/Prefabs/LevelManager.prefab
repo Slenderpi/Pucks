@@ -70,4 +70,5 @@ MonoBehaviour:
   _capacityGrowth: 10
   _shrinkCheckDelay: 0.666
   _shrinkCheckMemorySize: 32
-  PuckMoverPrefab: {fileID: 3050537813321254843, guid: 6365be0f239768544ad47833f25d7029, type: 3}
+  QuadPuck: {fileID: 3050537813321254843, guid: 6365be0f239768544ad47833f25d7029, type: 3}
+  OctaPuck: {fileID: 3050537813321254843, guid: 41dd341d2d1d9fb41b101ded7f70806a, type: 3}

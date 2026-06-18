@@ -1,5 +1,7 @@
 using NUnit.Framework;
+using Pucks;
 using Slenderpi.Utilities.CircularArray;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -36,7 +38,8 @@ public class PuckMoverPool : MonoBehaviour {
 
 	[Header("PuckMover prefabs")]
 
-	public PuckMover PuckMoverPrefab;
+	public PuckMover QuadPuck;
+	public PuckMover OctaPuck;
 
 	/// <summary>
 	/// Internal Pool capacity.
@@ -72,7 +75,7 @@ public class PuckMoverPool : MonoBehaviour {
 		Assert.IsTrue(_shrinkAtPercent < 1, "$[PuckMoverPool]: The ShrinkAtPercent value of {_shrinkAtPercent} cannot be more than 1.");
 		RecordedCounts = new(_shrinkCheckMemorySize);
 		_poolShrinkerWaiter = new(_shrinkCheckDelay);
-		InstantiatePuckMovers(_startingCapacity);
+		LevelManager.A_OnPuckSimulatorChanged += OnPuckSimulatorChanged;
 	}
 
 	private void Start() {
@@ -160,12 +163,11 @@ public class PuckMoverPool : MonoBehaviour {
 	void InstantiatePuckMovers(int num) {
 		CapcityIncreasedThisShrinkCheck = true;
 		for (int i = 0; i < num; i++) {
-			PuckMover pm = Instantiate(PuckMoverPrefab);
-			//PuckMover pm = Instantiate(PuckType switch {
-			//	EPuckType.Quad => _quadPuckPrefab,
-			//	EPuckType.Hex => _hexPuckPrefab,
-			//	_ => throw new InvalidOperationException("[LevelManager]: CreatePuckMoverPool() called with an invalid EPuckType to use!")
-			//});
+			PuckMover pm = Instantiate(LevelManager.Singleton.PuckType switch {
+				EPuckType.Quad => QuadPuck,
+				EPuckType.Octa => OctaPuck,
+				_ => throw new Exception($"[PuckMoverPool]: The puck type {LevelManager.Singleton.PuckType} does not have a prefab set up for it. You must link it in the code here.")
+			});
 			pm.gameObject.SetActive(false);
 			Pool.Add(pm);
 		}
@@ -177,6 +179,11 @@ public class PuckMoverPool : MonoBehaviour {
 			Destroy(Pool[end].gameObject);
 			Pool.RemoveAt(end);
 		}
+	}
+
+	void OnPuckSimulatorChanged(EPuckType type) {
+		Destroy();
+		InstantiatePuckMovers(_startingCapacity);
 	}
 
 }

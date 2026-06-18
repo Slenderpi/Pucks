@@ -401,14 +401,14 @@ namespace Pucks.Level {
 		public List<PuckNode> GetExitedPucks() => ExitedPucks;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Vector3 PointToPosition(Vector2Int point, float puckSize) => new(
+		public virtual Vector3 PointToPosition(Vector2Int point, float puckSize) => new(
 			point.y * puckSize + puckSize * 0.5f,
 			(HeightCount - point.x - 1) * puckSize + puckSize * 0.5f,
 			0
 		);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Vector2Int PositionToPoint(Vector3 position, float puckSize) => new(
+		public virtual Vector2Int PositionToPoint(Vector3 position, float puckSize) => new(
 			HeightCount - 1 - Mathf.RoundToInt((position.y - puckSize * 0.5f) / puckSize),
 			Mathf.RoundToInt((position.x - puckSize * 0.5f) / puckSize)
 		);
