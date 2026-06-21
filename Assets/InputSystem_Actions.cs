@@ -93,6 +93,15 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             ""id"": ""3ce5643a-292d-4547-b829-7b97cc1fdbda"",
             ""actions"": [
                 {
+                    ""name"": ""ToggleDevUi"",
+                    ""type"": ""Button"",
+                    ""id"": ""32140712-cee9-41c0-9087-40a08858fdb1"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
                     ""name"": ""ResetLevel"",
                     ""type"": ""Button"",
                     ""id"": ""bd294bf2-4a00-4008-a705-bf26df44b6ec"",
@@ -561,6 +570,17 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""ChangePuckType"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""46f5603c-0a53-415b-b7eb-821625c7e946"",
+                    ""path"": ""<Keyboard>/slash"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""ToggleDevUi"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -1650,6 +1670,7 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
 }");
         // Debug
         m_Debug = asset.FindActionMap("Debug", throwIfNotFound: true);
+        m_Debug_ToggleDevUi = m_Debug.FindAction("ToggleDevUi", throwIfNotFound: true);
         m_Debug_ResetLevel = m_Debug.FindAction("ResetLevel", throwIfNotFound: true);
         m_Debug_StepPucks = m_Debug.FindAction("StepPucks", throwIfNotFound: true);
         m_Debug_ToggleManualStepping = m_Debug.FindAction("ToggleManualStepping", throwIfNotFound: true);
@@ -1777,6 +1798,7 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
     // Debug
     private readonly InputActionMap m_Debug;
     private List<IDebugActions> m_DebugActionsCallbackInterfaces = new List<IDebugActions>();
+    private readonly InputAction m_Debug_ToggleDevUi;
     private readonly InputAction m_Debug_ResetLevel;
     private readonly InputAction m_Debug_StepPucks;
     private readonly InputAction m_Debug_ToggleManualStepping;
@@ -1806,6 +1828,10 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// Construct a new instance of the input action map wrapper class.
         /// </summary>
         public DebugActions(@InputSystem_Actions wrapper) { m_Wrapper = wrapper; }
+        /// <summary>
+        /// Provides access to the underlying input action "Debug/ToggleDevUi".
+        /// </summary>
+        public InputAction @ToggleDevUi => m_Wrapper.m_Debug_ToggleDevUi;
         /// <summary>
         /// Provides access to the underlying input action "Debug/ResetLevel".
         /// </summary>
@@ -1904,6 +1930,9 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         {
             if (instance == null || m_Wrapper.m_DebugActionsCallbackInterfaces.Contains(instance)) return;
             m_Wrapper.m_DebugActionsCallbackInterfaces.Add(instance);
+            @ToggleDevUi.started += instance.OnToggleDevUi;
+            @ToggleDevUi.performed += instance.OnToggleDevUi;
+            @ToggleDevUi.canceled += instance.OnToggleDevUi;
             @ResetLevel.started += instance.OnResetLevel;
             @ResetLevel.performed += instance.OnResetLevel;
             @ResetLevel.canceled += instance.OnResetLevel;
@@ -1969,6 +1998,9 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// <seealso cref="DebugActions" />
         private void UnregisterCallbacks(IDebugActions instance)
         {
+            @ToggleDevUi.started -= instance.OnToggleDevUi;
+            @ToggleDevUi.performed -= instance.OnToggleDevUi;
+            @ToggleDevUi.canceled -= instance.OnToggleDevUi;
             @ResetLevel.started -= instance.OnResetLevel;
             @ResetLevel.performed -= instance.OnResetLevel;
             @ResetLevel.canceled -= instance.OnResetLevel;
@@ -2603,6 +2635,13 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
     /// <seealso cref="DebugActions.RemoveCallbacks(IDebugActions)" />
     public interface IDebugActions
     {
+        /// <summary>
+        /// Method invoked when associated input action "ToggleDevUi" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnToggleDevUi(InputAction.CallbackContext context);
         /// <summary>
         /// Method invoked when associated input action "ResetLevel" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>

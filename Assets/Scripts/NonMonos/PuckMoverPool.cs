@@ -47,6 +47,11 @@ public class PuckMoverPool : MonoBehaviour {
 	public int Capacity => Pool.Count;
 
 	/// <summary>
+	/// The number of PuckMovers currently active.
+	/// </summary>
+	public int Count => PoolPointer;
+
+	/// <summary>
 	/// Internal pool of pre-spawned PuckMovers.
 	/// </summary>
 	protected readonly List<PuckMover> Pool = new();

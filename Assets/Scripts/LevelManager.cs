@@ -48,8 +48,7 @@ public class LevelManager : MonoBehaviour {
 	public float StepUpdateDelay = 0.1f;
 
 	[Header("Debug")]
-	[SerializeField]
-	bool _updateManually = false;
+	public bool UpdateManually = false;
 	[SerializeField]
 	int _startingDifficulty = 0;
 
@@ -91,7 +90,7 @@ public class LevelManager : MonoBehaviour {
 		D_DrawLevelGridOutline();
 		if (!_puckSimulator.HasLevelStarted)
 			return;
-		if (!_updateManually) {
+		if (!UpdateManually) {
 			while (_timeSinceLastStep >= StepUpdateDelay) {
 				_timeSinceLastStep -= StepUpdateDelay;
 				_puckSimulator.Step();
@@ -216,7 +215,7 @@ public class LevelManager : MonoBehaviour {
 		var da = GameManager.DebugActions;
 		da.ResetLevel.started += OnResetLevelActionStarted;
 		da.StepPucks.started += OnStepPucksActionStarted;
-		da.ToggleManualStepping.started += _ => _updateManually = !_updateManually;
+		da.ToggleManualStepping.started += _ => UpdateManually = !UpdateManually;
 		da.GenerateFilledLevel.started += _ => _puckSimulator.GenerateLevel(-1);
 		da.GenerateLevel0.started += _ => _puckSimulator.GenerateLevel(0);
 		da.GenerateLevel1.started += _ => _puckSimulator.GenerateLevel(1);

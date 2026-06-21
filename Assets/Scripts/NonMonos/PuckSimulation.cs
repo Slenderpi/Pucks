@@ -37,6 +37,17 @@ namespace Pucks.Level {
 		/// </summary>
 		public Action<int, int, int> A_OnLevelGenFailed;
 		/// <summary>
+		/// Broadcasted if GenerateLevel() had at least one failure of any kind. Mostly for debug info.<br/>
+		/// int: numGenProcessFails<br/>
+		/// int: numUnsovlableFails
+		/// </summary>
+		public Action<int, int> A_OnLevelGenHadAnyFail;
+		/// <summary>
+		/// Broadcasted when a Puck is pushed. This is broadcast before Step() is called within PushPuck().<br/>
+		/// PuckNode: puck
+		/// </summary>
+		public Action<PuckNode> A_OnPuckPushed;
+		/// <summary>
 		/// Broadcast if the level results in the win state.
 		/// </summary>
 		public Action A_OnLevelWon;
@@ -177,6 +188,7 @@ namespace Pucks.Level {
 			} while (numGenProcessFails + numUnsovlableFails < MAX_TRIES);
 			if (numGenProcessFails + numUnsovlableFails > 0) {
 				Debug.LogWarning($"[LevelManager]: Level generation failed {numGenProcessFails + numUnsovlableFails} (max {MAX_TRIES}) times for difficulty {difficulty}. Of them, {numGenProcessFails} were generation issues, and {numUnsovlableFails} were from impossible puzzles.");
+				A_OnLevelGenHadAnyFail?.Invoke(numGenProcessFails, numUnsovlableFails);
 				if (numGenProcessFails + numUnsovlableFails == MAX_TRIES) {
 					ClearLevel();
 					A_OnLevelGenFailed?.Invoke(difficulty, numGenProcessFails, numUnsovlableFails);
@@ -364,6 +376,7 @@ namespace Pucks.Level {
 				return;
 			}
 			PushPuck_Implementation(point, direction);
+			A_OnPuckPushed?.Invoke(MovingPucks[0]);
 			Step();
 
 			//{
