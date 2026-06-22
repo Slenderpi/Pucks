@@ -1,10 +1,11 @@
-using NUnit.Framework;
 using Pucks;
 using Pucks.Level;
 using System.Runtime.CompilerServices;
 using System.Text;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Assertions;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 [RequireComponent(typeof(Canvas))]
@@ -39,6 +40,10 @@ public class DevCanvas : MonoBehaviour {
 	TMP_Text ToggleInfoPanelButtonText;
 	public Button ToggleConsoleOutputPanelButton;
 	TMP_Text ToggleConsoleOutputoPanelButtonText;
+	public TMP_InputField UpdateDelayInputField;
+	string _prevUpdateDelayStr;
+	public TMP_InputField PuckSizeInputField;
+	string _prevPuckSizeStr;
 
 	[Header("Dev Console")]
 	public GameObject DevConsoleOutputPanel;
@@ -132,6 +137,17 @@ public class DevCanvas : MonoBehaviour {
 				InfoStrb.AppendLine("Level gen fails: 0 | Unsolvable gens: 0");
 		}
 
+		// Solution
+		if (!hasPS)
+			InfoStrb.AppendLine("Solution: ~");
+		else {
+			InfoStrb.Append("Solution: ")
+					.Append(WrapWithColor(ps.SolutionPosition.ToString(), STR_COL_COMMON))
+					.Append(" with direction ")
+					.Append(WrapWithColor(ps.SolutionDirection.ToString(), STR_COL_COMMON))
+					.AppendLine();
+		}
+
 		// Spawned | Started | Ended
 		if (!hasPS)
 			InfoStrb.AppendLine("Spawned: ~ | Started: ~ | Ended: ~");
@@ -151,6 +167,20 @@ public class DevCanvas : MonoBehaviour {
 			AppendInt(InfoStrb.Append(" | Exited: "), ps.NumExitedPuck);
 			InfoStrb.AppendLine();
 		}
+
+		InfoStrb.AppendLine();
+
+		// Mouse grid point: \n Mouse exact position
+		if (!hasPS)
+			InfoStrb.AppendLine("Mouse grid point: ~");
+		else {
+			InfoStrb.Append("Mouse grid point: ")
+					.Append(WrapWithColor(PlayerSliderControl.Dev_GetMouseGridPoint().ToString(), STR_COL_COMMON));
+			InfoStrb.AppendLine();
+		}
+		InfoStrb.Append("Mouse exact position: ")
+				.Append(WrapWithColor(PlayerSliderControl.Dev_GetMouseWorldPosition().ToString(), STR_COL_COMMON));
+		InfoStrb.AppendLine();
 
 		InfoStrb.AppendLine();
 
@@ -181,6 +211,14 @@ public class DevCanvas : MonoBehaviour {
 			InfoStrb.Append("Manual stepping: ")
 					.Append(LevelManager.Singleton.UpdateManually ? STR_ON : STR_OFF);
 			AppendFloat(InfoStrb.Append(" | Step update delay: "), LevelManager.Singleton.StepUpdateDelay);
+			InfoStrb.AppendLine();
+		}
+
+		// Time since last step
+		if (!hasLMS || LevelManager.Singleton.UpdateManually)
+			InfoStrb.AppendLine("Time since last step: ~");
+		else {
+			AppendFloat(InfoStrb.Append("Time since last step: "), LevelManager.Dev_GetTimeSinceLastStep());
 			InfoStrb.AppendLine();
 		}
 
@@ -306,6 +344,46 @@ public class DevCanvas : MonoBehaviour {
 			}
 		});
 		ToggleConsoleOutputoPanelButtonText.SetText(DevConsoleOutputPanel.activeSelf ? "Hide CONSOLE" : "Show CONSOLE");
+
+		if (LevelManager.Singleton != null)
+			UpdateDelayInputField.SetTextWithoutNotify(LevelManager.Singleton.StepUpdateDelay.ToString());
+		_prevUpdateDelayStr = UpdateDelayInputField.text;
+		UpdateDelayInputField.onSelect.AddListener(_ => OnEditableControlSelected());
+		UpdateDelayInputField.onDeselect.AddListener(_ => OnEditableControlDeselected());
+		UpdateDelayInputField.onValueChanged.AddListener((str) => {
+			if (str != string.Empty && str.Contains('-'))
+				UpdateDelayInputField.SetTextWithoutNotify("0");
+		});
+		UpdateDelayInputField.onEndEdit.AddListener((str) => {
+			if (str == string.Empty || !LevelManager.Dev_SetStepUpdateDelay(float.Parse(str)))
+				UpdateDelayInputField.SetTextWithoutNotify(_prevUpdateDelayStr);
+			else
+				_prevUpdateDelayStr = str;
+		});
+
+		if (LevelManager.Singleton != null)
+			PuckSizeInputField.SetTextWithoutNotify(LevelManager.Singleton.PuckSize.ToString());
+		_prevPuckSizeStr = PuckSizeInputField.text;
+		PuckSizeInputField.onSelect.AddListener(_ => OnEditableControlSelected());
+		PuckSizeInputField.onDeselect.AddListener(_ => OnEditableControlDeselected());
+		PuckSizeInputField.onValueChanged.AddListener((str) => {
+			if (str != string.Empty && str.Contains('-'))
+				PuckSizeInputField.SetTextWithoutNotify("0");
+		});
+		PuckSizeInputField.onEndEdit.AddListener((str) => {
+			if (str == string.Empty || !LevelManager.Dev_SetPuckSize(float.Parse(str)))
+				PuckSizeInputField.SetTextWithoutNotify(_prevPuckSizeStr);
+			else
+				_prevPuckSizeStr = str;
+		});
+	}
+
+	void OnEditableControlSelected() {
+		GameManager.DebugActions.Disable();
+	}
+
+	void OnEditableControlDeselected() {
+		GameManager.DebugActions.Enable();
 	}
 
 }

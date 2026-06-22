@@ -287,4 +287,45 @@ public class LevelManager : MonoBehaviour {
 		Util.D_DrawBox(box + new float3(_positionOffset) - box / 2f, box, Color.black, duration, false);
 	}
 
+	/// <summary>
+	/// Returns true if success.
+	/// </summary>
+	/// <param name="size"></param>
+	/// <returns></returns>
+	internal static bool Dev_SetPuckSize(float size) {
+		if (!Singleton) {
+			Debug.LogWarning("[Dev]: Dev_SetPuckSize(): no LevelManager Singleton exists at this moment.");
+			return false;
+		} else if (size < 0.0001f) {
+			Debug.LogWarning($"[Dev]: Dev_SetPuckSize() called with too small of a value. Was given {size}. Please give a larger value.");
+			return false;
+		}
+		Singleton.PuckSize = size;
+		Singleton._positionOffset = new(Singleton.WidthCount * Singleton.PuckSize / -2f, Singleton.HeightCount * Singleton.PuckSize / -2f, 0);
+		foreach (var (pn, pm) in Singleton._activePuckMovers) {
+			pm.transform.position = Singleton.GetLerpedPosition(pn);
+		}
+		return true;
+	}
+
+	internal static bool Dev_SetStepUpdateDelay(float delay) {
+		if (!Singleton) {
+			Debug.LogWarning("[Dev]: Dev_SetStepUpdateDelay(): no LevelManager Singleton exists at this moment.");
+			return false;
+		} else if (delay < 0.0001f) {
+			Debug.LogWarning($"[Dev]: Dev_SetStepUpdateDelay() called with too small of a value. Was given {delay}. Please give a larger value.");
+			return false;
+		}
+		Singleton.StepUpdateDelay = delay;
+		return true;
+	}
+
+	internal static float Dev_GetTimeSinceLastStep() {
+		if (!Singleton) {
+			Debug.LogWarning("[Dev]: Dev_GetTimeSinceLastStep(): no LevelManager Singleton exists at this moment.");
+			return 0.0f;
+		}
+		return Singleton._timeSinceLastStep;
+	}
+
 }

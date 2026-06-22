@@ -598,6 +598,15 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""MoveMouse"",
+                    ""type"": ""Value"",
+                    ""id"": ""5788b054-8890-495c-ab0f-6d9400162f0e"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
                 }
             ],
             ""bindings"": [
@@ -609,6 +618,17 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""SelectSlider"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""2ddd373a-3599-4635-9ee2-a70cee161e74"",
+                    ""path"": ""<Mouse>/position"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""MoveMouse"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -1692,6 +1712,7 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         // Player
         m_Player = asset.FindActionMap("Player", throwIfNotFound: true);
         m_Player_SelectSlider = m_Player.FindAction("SelectSlider", throwIfNotFound: true);
+        m_Player_MoveMouse = m_Player.FindAction("MoveMouse", throwIfNotFound: true);
         // Example
         m_Example = asset.FindActionMap("Example", throwIfNotFound: true);
         m_Example_Move = m_Example.FindAction("Move", throwIfNotFound: true);
@@ -2093,6 +2114,7 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
     private readonly InputActionMap m_Player;
     private List<IPlayerActions> m_PlayerActionsCallbackInterfaces = new List<IPlayerActions>();
     private readonly InputAction m_Player_SelectSlider;
+    private readonly InputAction m_Player_MoveMouse;
     /// <summary>
     /// Provides access to input actions defined in input action map "Player".
     /// </summary>
@@ -2108,6 +2130,10 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Player/SelectSlider".
         /// </summary>
         public InputAction @SelectSlider => m_Wrapper.m_Player_SelectSlider;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/MoveMouse".
+        /// </summary>
+        public InputAction @MoveMouse => m_Wrapper.m_Player_MoveMouse;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -2137,6 +2163,9 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @SelectSlider.started += instance.OnSelectSlider;
             @SelectSlider.performed += instance.OnSelectSlider;
             @SelectSlider.canceled += instance.OnSelectSlider;
+            @MoveMouse.started += instance.OnMoveMouse;
+            @MoveMouse.performed += instance.OnMoveMouse;
+            @MoveMouse.canceled += instance.OnMoveMouse;
         }
 
         /// <summary>
@@ -2151,6 +2180,9 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @SelectSlider.started -= instance.OnSelectSlider;
             @SelectSlider.performed -= instance.OnSelectSlider;
             @SelectSlider.canceled -= instance.OnSelectSlider;
+            @MoveMouse.started -= instance.OnMoveMouse;
+            @MoveMouse.performed -= instance.OnMoveMouse;
+            @MoveMouse.canceled -= instance.OnMoveMouse;
         }
 
         /// <summary>
@@ -2783,6 +2815,13 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnSelectSlider(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "MoveMouse" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnMoveMouse(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "Example" which allows adding and removing callbacks.

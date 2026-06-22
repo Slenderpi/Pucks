@@ -5,12 +5,29 @@ using UnityEngine.InputSystem;
 
 public class PlayerSliderControl : MonoBehaviour {
 
+	public static PlayerSliderControl Singleton;
+
 	[SerializeField]
 	[Tooltip("The mouse must be dragged a distance at least this value to be considered as selecting and moving a Slider.")]
 	float _dragDeadzone = 0.33f;
 
 	[SerializeField]
 	LineRenderer _dragLine;
+
+	public Vector2 MouseScreenPosition {
+		get => _mouseScreenPosition;
+		private set {
+			_mouseScreenPosition = value;
+			if (Camera.main != null) {
+				MouseWorldPosition = Camera.main.ScreenToWorldPoint(new(_mouseScreenPosition.x, _mouseScreenPosition.y, Mathf.Abs(Camera.main.transform.position.z)));
+				if (LevelManager.Singleton != null && LevelManager.Singleton.PuckSimulator != null)
+					MouseGridPoint = LevelManager.Singleton.PositionToPoint(MouseWorldPosition);
+			}
+		}
+	}
+	Vector2 _mouseScreenPosition;
+	public Vector3 MouseWorldPosition { get; private set; }
+	public Vector2Int MouseGridPoint { get; private set; }
 
 	bool _isDragging;
 	PuckNode _selectedPuck;
@@ -20,13 +37,22 @@ public class PlayerSliderControl : MonoBehaviour {
 
 
 	private void Awake() {
-		_dragLine.widthMultiplier = 0.1f;
-		_dragLine.enabled = false;
+		if (!Singleton) {
+			Singleton = this;
+
+			_dragLine.widthMultiplier = 0.1f;
+			_dragLine.enabled = false;
+		} else if (Singleton != this) {
+			Destroy(gameObject);
+		}
 	}
 
 	private void Start() {
 		GameManager.PlayerActions.SelectSlider.started += OnSelectSliderStarted;
 		GameManager.PlayerActions.SelectSlider.canceled += OnSelectSliderCanceled;
+		GameManager.PlayerActions.MoveMouse.performed += (InputAction.CallbackContext context) => {
+			MouseScreenPosition = context.ReadValue<Vector2>();
+		};
 		GameManager.PlayerActions.Enable();
 	}
 
@@ -36,9 +62,7 @@ public class PlayerSliderControl : MonoBehaviour {
 		if (LevelManager.Singleton.PuckSimulator.HasLevelStarted)
 			return;
 		if (_isDragging) {
-			// TODO: replace
-			Vector3 mpos = GetMouseWorldPosition();
-			Vector3 dragVector = mpos - _mouseSelectStart;
+			Vector3 dragVector = MouseWorldPosition - _mouseSelectStart;
 			if (SuccessfullySelectedPuck()) {
 				Vector3 puckPos = LevelManager.Singleton.PointToPosition(_selectedPuck.GridPoint);
 				Vector2Int dragVectAsDir = LevelManager.Singleton.PuckSimulator.DragVectorToDirection(dragVector);
@@ -48,7 +72,7 @@ public class PlayerSliderControl : MonoBehaviour {
 					if (!_dragLine.enabled)
 						_dragLine.enabled = true;
 					Util.D_DrawBox(puckPos, new(LevelManager.Singleton.PuckSize + 0.01f), Color.cyan); // slider
-					Util.D_DrawArrowFromTo(_mouseSelectStart, mpos, Color.green); // dragVector
+					Util.D_DrawArrowFromTo(_mouseSelectStart, MouseWorldPosition, Color.green); // dragVector
 					Util.D_DrawArrowFromTo(
 						puckPos,
 						alignedDragVector * 2f + puckPos,
@@ -58,7 +82,7 @@ public class PlayerSliderControl : MonoBehaviour {
 					if (_dragLine.enabled)
 						_dragLine.enabled = false;
 					Util.D_DrawBox(puckPos, new(LevelManager.Singleton.PuckSize + 0.01f), Color.yellow); // slider
-					Util.D_DrawArrowFromTo(_mouseSelectStart, mpos, Color.yellow); // dragVector
+					Util.D_DrawArrowFromTo(_mouseSelectStart, MouseWorldPosition, Color.yellow); // dragVector
 				}
 			} else {
 				Debug.DrawRay( // dragVector
@@ -71,7 +95,7 @@ public class PlayerSliderControl : MonoBehaviour {
 			}
 		} else {
 			// TODO: replace
-			PuckNode p = LevelManager.Singleton.GetPuckAt(GetMouseWorldPosition());
+			PuckNode p = LevelManager.Singleton.GetPuckAt(MouseWorldPosition);
 			if (p == null) {
 				if (_hoveredPuckMover != null) {
 					_hoveredPuckMover.OnHoverEnd();
@@ -99,16 +123,12 @@ public class PlayerSliderControl : MonoBehaviour {
 		if (LevelManager.Singleton.PuckSimulator.HasLevelStarted)
 			return;
 		_isDragging = true;
-		_mouseSelectStart = GetMouseWorldPosition();
-		// TODO: replace
+		_mouseSelectStart = MouseWorldPosition;
 		_selectedPuck = LevelManager.Singleton.GetPuckAt(_mouseSelectStart);
-		//_selectedPuck = LevelManager.GetPuckAt(_mouseSelectStart);
 		if (SuccessfullySelectedPuck()) {
 			_hoveredPuckMover = LevelManager.GetPuckMoverFromPuck(_selectedPuck);
 			_hoveredPuckMover.OnSelectBegin();
-			// TODO: replace
 			_dragLine.SetPosition(0, LevelManager.Singleton.PointToPosition(_selectedPuck.GridPoint));
-			//_dragLine.SetPosition(0, LevelManager.Singleton.PointToPosition(_selectedPuck.GridPoint));
 		}
 	}
 
@@ -121,27 +141,21 @@ public class PlayerSliderControl : MonoBehaviour {
 			_hoveredPuckMover.OnSelectEnd();
 			_hoveredPuckMover = null;
 		}
-		Vector3 dragVector = GetMouseWorldPosition() - _mouseSelectStart;
+		Vector3 dragVector = MouseWorldPosition - _mouseSelectStart;
 		if (!SuccessfullySelectedPuck() || !IsDragDistBigEnough(dragVector))
 			return;
-		// TODO: replace
 		LevelManager.Singleton.PuckSimulator.PushPuck(
 			_selectedPuck.GridPoint,
 			LevelManager.Singleton.PuckSimulator.DragVectorToDirection(dragVector)
 		);
-		//LevelManager.StartLevelWithChoice(_selectedPuck.GridPoint, GetMovementDirection(dragVector));
 		_selectedPuck = null;
-	}
-
-	Vector3 GetMouseWorldPosition() {
-		Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
-		return new Plane(Vector3.back, Vector3.zero).Raycast(ray, out float distance)
-			? ray.GetPoint(distance)
-			: Vector3.zero;
 	}
 
 	bool SuccessfullySelectedPuck() => _selectedPuck != null;
 
 	bool IsDragDistBigEnough(Vector3 dragVector) => Vector3.SqrMagnitude(dragVector) >= Util.pow2(_dragDeadzone);
+
+	public static Vector3 Dev_GetMouseWorldPosition() => Singleton.MouseWorldPosition;
+	public static Vector2Int Dev_GetMouseGridPoint() => Singleton.MouseGridPoint;
 
 }
