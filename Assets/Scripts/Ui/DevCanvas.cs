@@ -1,11 +1,12 @@
 using Pucks;
 using Pucks.Level;
+using Slenderpi.Utilities.CircularArray;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Assertions;
-using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 [RequireComponent(typeof(Canvas))]
@@ -17,7 +18,10 @@ public class DevCanvas : MonoBehaviour {
 	internal const string STR_OFF = "<color=red>OFF</color>";
 	internal const string STR_COL_NUMBER = "yellow";
 	internal const string STR_COL_COMMON = "#00ffff";
-	internal const string STR_COL_CONSOLE_TIMESTAMP = "#cdcdcd";
+	internal const string STR_COL_LOG_TIMESTAMP = "#cdcdcd";
+	internal const string STR_COL_LOG_LOG = "white";
+	internal const string STR_COL_LOG_WARN = "yellow";
+	internal const string STR_COL_LOG_ERROR = "red";
 
 	public bool IsVisible {
 		get => _devCanvas.enabled;
@@ -47,9 +51,14 @@ public class DevCanvas : MonoBehaviour {
 
 	[Header("Dev Console")]
 	public GameObject DevConsoleOutputPanel;
+	[Min(1)]
+	[Tooltip("Determines the max number of logs that will be tracked.")]
+	public int ConsoleLogTrackLimit = 15;
 	public TMP_Text ConsoleOutputText;
+	public TMP_Text ConsoleOuputTimestampText;
 
 	public readonly StringBuilder InfoStrb = new();
+	public readonly StringBuilder CLogStrb = new();
 
 	/// <summary>
 	/// numGenProcessFails, numUnsovlableFails
@@ -59,6 +68,8 @@ public class DevCanvas : MonoBehaviour {
 	int _lastStepCollisions = 0;
 	Vector2Int _pushedPuckGridpoint = new();
 	Vector2Int _pushedPuckDirection = new();
+	CircularArray<string> _trackedLogs;
+	string _currentTimestamp = string.Empty;
 
 
 
@@ -67,8 +78,11 @@ public class DevCanvas : MonoBehaviour {
 		Assert.IsNotNull(DevInfoPanel, "[DevCanvas]: DevInfoPanel reference not set.");
 
 		LevelManager.A_OnPuckSimulatorChanged += OnPuckSimulatorChanged;
+		Application.logMessageReceived += OnLogMessageReceived;
 
 		_devCanvas.enabled = false;
+		_trackedLogs = new(ConsoleLogTrackLimit);
+		_trackedLogs.SetAll(string.Empty);
 	}
 
 	private void Start() {
@@ -77,11 +91,14 @@ public class DevCanvas : MonoBehaviour {
 	}
 
 	private void Update() {
+		_currentTimestamp = WrapWithColor($"[{Time.unscaledTime,10:F4}] ", STR_COL_LOG_TIMESTAMP).ToString();
 		UpdateInfoText();
+		UpdateConsoleText();
 	}
 
 	private void OnDestroy() {
 		LevelManager.A_OnPuckSimulatorChanged -= OnPuckSimulatorChanged;
+		Application.logMessageReceived -= OnLogMessageReceived;
 	}
 
 	void OnPuckSimulatorChanged(EPuckType type) {
@@ -236,6 +253,27 @@ public class DevCanvas : MonoBehaviour {
 
 		// SET TMP TEXT
 		InfoText.SetText(InfoStrb.ToString());
+	}
+
+	void UpdateConsoleText() {
+		CLogStrb.Clear();
+		for (int i = _trackedLogs.Capacity - 1; i >= 0 ; i--) {
+			CLogStrb.AppendLine(_trackedLogs[i]);
+		}
+		ConsoleOutputText.SetText(CLogStrb.ToString());
+		ConsoleOuputTimestampText.SetText(_currentTimestamp);
+	}
+
+	void OnLogMessageReceived(string log, string stackTrace, LogType type) {
+		_trackedLogs.Add(
+			WrapWithColor(
+				log,
+				type == LogType.Log ? STR_COL_LOG_LOG : (type == LogType.Warning ? STR_COL_LOG_WARN : STR_COL_LOG_ERROR)
+			).Insert(
+				0,
+				_currentTimestamp
+			).ToString()
+		);
 	}
 
 	internal string BoolAsString(bool b) => b ? STR_TRUE : STR_FALSE;

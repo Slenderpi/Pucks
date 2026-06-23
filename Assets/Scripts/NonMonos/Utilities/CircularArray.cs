@@ -18,8 +18,8 @@ namespace Slenderpi.Utilities.CircularArray {
 		private int _headPointer;
 
 		public T this[int index] {
-			get => _arr[index];
-			set => _arr[index] = value;
+			get => _arr[(index + HeadPointer) % Capacity];
+			set => _arr[(index + HeadPointer) % Capacity] = value;
 		}
 
 
@@ -63,7 +63,7 @@ namespace Slenderpi.Utilities.CircularArray {
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Add(T elem) {
 			_arr[_headPointer] = elem;
-			_headPointer = (_headPointer + 1) % (Capacity - 1);
+			_headPointer = (_headPointer + 1) % Capacity;
 		}
 
 	}
