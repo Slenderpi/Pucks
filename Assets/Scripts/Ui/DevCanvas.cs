@@ -13,15 +13,15 @@ using UnityEngine.UI;
 public class DevCanvas : MonoBehaviour {
 
 	internal const string STR_TRUE = "<color=green>true</color>";
-	internal const string STR_FALSE = "<color=red>false</color>";
+	internal const string STR_FALSE = "<color=#ff4f4f>false</color>";
 	internal const string STR_ON = "<color=green>ON</color>";
-	internal const string STR_OFF = "<color=red>OFF</color>";
+	internal const string STR_OFF = "<color=#ff4f4f>OFF</color>";
 	internal const string STR_COL_NUMBER = "yellow";
 	internal const string STR_COL_COMMON = "#00ffff";
 	internal const string STR_COL_LOG_TIMESTAMP = "#cdcdcd";
 	internal const string STR_COL_LOG_LOG = "white";
 	internal const string STR_COL_LOG_WARN = "yellow";
-	internal const string STR_COL_LOG_ERROR = "red";
+	internal const string STR_COL_LOG_ERROR = "#ff4f4f";
 
 	public bool IsVisible {
 		get => _devCanvas.enabled;
@@ -48,6 +48,12 @@ public class DevCanvas : MonoBehaviour {
 	string _prevUpdateDelayStr;
 	public TMP_InputField PuckSizeInputField;
 	string _prevPuckSizeStr;
+	public TMP_InputField GenerateLevelInputField;
+	int _levelToGenerate = 0;
+	public Button GenerateLevelButton;
+	public Button ToggleManualSteppingButton;
+	public Button StepLevelButton;
+	TMP_Text _stepLevelButtonText;
 
 	[Header("Dev Console")]
 	public GameObject DevConsoleOutputPanel;
@@ -80,9 +86,20 @@ public class DevCanvas : MonoBehaviour {
 		LevelManager.A_OnPuckSimulatorChanged += OnPuckSimulatorChanged;
 		Application.logMessageReceived += OnLogMessageReceived;
 
+		LevelManager.A_OnPuckSimulatorChanged += _ => {
+			PuckSimulation ps = LevelManager.Singleton.PuckSimulator;
+			ps.A_OnLevelSpawned += () => {
+				_stepLevelButtonText.SetText("Push Solution (Space)");
+			};
+			ps.A_OnPuckPushed += _ => {
+				_stepLevelButtonText.SetText("Step Level (Space)");
+			};
+		};
+
 		_devCanvas.enabled = false;
 		_trackedLogs = new(ConsoleLogTrackLimit);
 		_trackedLogs.SetAll(string.Empty);
+		_stepLevelButtonText = StepLevelButton.GetComponentInChildren<TMP_Text>();
 	}
 
 	private void Start() {
@@ -397,6 +414,7 @@ public class DevCanvas : MonoBehaviour {
 				UpdateDelayInputField.SetTextWithoutNotify(_prevUpdateDelayStr);
 			else
 				_prevUpdateDelayStr = str;
+			OnEditableControlDeselected();
 		});
 
 		if (LevelManager.Singleton != null)
@@ -413,6 +431,50 @@ public class DevCanvas : MonoBehaviour {
 				PuckSizeInputField.SetTextWithoutNotify(_prevPuckSizeStr);
 			else
 				_prevPuckSizeStr = str;
+			OnEditableControlDeselected();
+		});
+
+		GenerateLevelInputField.onSelect.AddListener(_ => OnEditableControlSelected());
+		GenerateLevelInputField.onDeselect.AddListener(_ => OnEditableControlDeselected());
+		GenerateLevelInputField.onEndEdit.AddListener((str) => {
+			if (str == string.Empty)
+				GenerateLevelInputField.SetTextWithoutNotify("0");
+			else
+				_levelToGenerate = int.Parse(str);
+			OnEditableControlDeselected();
+		});
+		GenerateLevelButton.onClick.AddListener(() => {
+			if (LevelManager.Singleton == null) {
+				Debug.LogWarning("[DevCanvas]: Level generation button clicked but no LevelManager Singleton currently exists.");
+				return;
+			} else if (LevelManager.Singleton.PuckSimulator == null) {
+				Debug.LogWarning("[DevCanvas]: Level generation button clicked but LevelManager currently does not have a PuckSimulation object.");
+				return;
+			}
+			Debug.Log($"[DevCanvas]: Level generation button clicked with level {_levelToGenerate}.");
+			LevelManager.Singleton.PuckSimulator.GenerateLevel(_levelToGenerate);
+		});
+
+		ToggleManualSteppingButton.onClick.AddListener(() => {
+			if (LevelManager.Singleton == null) {
+				Debug.LogWarning("[DevCanvas]: Toggle Manual Stepping button clicked but no LevelManager Singleton currently exists.");
+				return;
+			}
+			LevelManager.Singleton.UpdateManually = !LevelManager.Singleton.UpdateManually;
+		});
+
+		StepLevelButton.onClick.AddListener(() => {
+			if (LevelManager.Singleton == null) {
+				Debug.LogWarning("[DevCanvas]: Step Level button clicked but no LevelManager Singleton currently exists.");
+				return;
+			} else if (LevelManager.Singleton.PuckSimulator == null) {
+				Debug.LogWarning("[DevCanvas]: Step Level button clicked but LevelManager currently does not have a PuckSimulation object.");
+				return;
+			}
+			if (LevelManager.Singleton.PuckSimulator.HasLevelStarted)
+				LevelManager.Singleton.PuckSimulator.Step();
+			else
+				LevelManager.Singleton.PuckSimulator.PushSolutionPuck();
 		});
 	}
 
